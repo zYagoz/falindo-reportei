@@ -1,6 +1,7 @@
 "use client";
 
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Cell, Pie, PieChart, Tooltip } from "recharts";
+import { useChartContainerReady } from "@/lib/hooks/useChartContainerReady";
 
 interface DonutChartProps<T> {
   data: T[];
@@ -15,10 +16,12 @@ export function DonutChart<T extends Record<string, string | number>>({
   dataKey,
   nameKey,
 }: DonutChartProps<T>) {
+  const { containerRef, isReady, size } = useChartContainerReady<HTMLDivElement>();
+
   return (
-    <div className="h-72 min-h-72 min-w-0 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+    <div ref={containerRef} className="h-72 min-h-72 min-w-0 w-full">
+      {isReady ? (
+        <PieChart height={Math.floor(size.height)} width={Math.floor(size.width)}>
           <Pie
             cx="50%"
             cy="50%"
@@ -35,7 +38,7 @@ export function DonutChart<T extends Record<string, string | number>>({
           </Pie>
           <Tooltip />
         </PieChart>
-      </ResponsiveContainer>
+      ) : null}
     </div>
   );
 }

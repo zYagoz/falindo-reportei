@@ -4,11 +4,11 @@ import {
   CartesianGrid,
   Line,
   LineChart as RechartsLineChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import { useChartContainerReady } from "@/lib/hooks/useChartContainerReady";
 
 interface LineChartProps<T> {
   data: T[];
@@ -21,10 +21,12 @@ export function LineChart<T extends Record<string, string | number>>({
   dataKey,
   xKey,
 }: LineChartProps<T>) {
+  const { containerRef, isReady, size } = useChartContainerReady<HTMLDivElement>();
+
   return (
-    <div className="h-72 min-w-0 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <RechartsLineChart data={data}>
+    <div ref={containerRef} className="h-72 min-h-72 min-w-0 w-full">
+      {isReady ? (
+        <RechartsLineChart data={data} height={Math.floor(size.height)} width={Math.floor(size.width)}>
           <CartesianGrid stroke="rgba(249, 115, 22, 0.15)" strokeDasharray="4 4" />
           <XAxis dataKey={xKey as string} tickLine={false} axisLine={false} />
           <YAxis tickLine={false} axisLine={false} />
@@ -37,7 +39,7 @@ export function LineChart<T extends Record<string, string | number>>({
             type="monotone"
           />
         </RechartsLineChart>
-      </ResponsiveContainer>
+      ) : null}
     </div>
   );
 }

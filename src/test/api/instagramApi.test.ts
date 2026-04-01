@@ -65,6 +65,34 @@ describe("instagram api layer", () => {
     );
   });
 
+  it("splits ranges longer than 30 days into multiple insight windows", async () => {
+    metaFetchMock.mockImplementation((_endpoint: string, options?: { params?: Record<string, string> }) => {
+      const metric = options?.params?.metric;
+
+      if (metric === "reach") {
+        return Promise.resolve(metaReachSeriesResponse);
+      }
+
+      if (metric === "follows_and_unfollows") {
+        return Promise.resolve(metaFollowsResponse);
+      }
+
+      return Promise.resolve(metaTotalInsightsResponse);
+    });
+
+    const result = await fetchAccountInsights("ig-1", "2026-01-02", "2026-04-01");
+    const reachCalls = metaFetchMock.mock.calls.filter(
+      ([, options]) => options?.params?.metric === "reach",
+    );
+
+    expect(reachCalls).toHaveLength(3);
+    expect(reachCalls[0][1].params).toMatchObject({ since: "2026-01-02", until: "2026-01-31" });
+    expect(reachCalls[1][1].params).toMatchObject({ since: "2026-02-01", until: "2026-03-02" });
+    expect(reachCalls[2][1].params).toMatchObject({ since: "2026-03-03", until: "2026-04-01" });
+    expect(result.total_interactions).toBe(2820);
+    expect(result.reach).toHaveLength(9);
+  });
+
   it("uses only supported demographics timeframes", async () => {
     metaFetchMock
       .mockResolvedValueOnce(metaFollowersGenderResponse)

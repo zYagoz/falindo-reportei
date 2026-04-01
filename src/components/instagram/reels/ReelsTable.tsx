@@ -16,7 +16,7 @@ export function ReelsTable({ reels }: ReelsTableProps) {
       <table className="w-full min-w-[860px] text-left text-sm md:min-w-[920px]">
         <thead className="bg-[var(--color-primary)]/8 text-[var(--color-text-muted)]">
           <tr>
-            {["Reel", "Criado em", "Plays", "Alcance", "Curtidas", "Comentários", "Interações", "ER"].map(
+            {["Reel", "Criado em", "Visualizações", "Alcance", "Curtidas", "Comentários", "Interações", "ER"].map(
               (label) => (
                 <th key={label} className="px-4 py-3 font-medium">
                   {label}

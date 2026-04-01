@@ -37,6 +37,118 @@ type MetaMedia = {
   timestamp: string;
 };
 
+type DateWindow = {
+  since: string;
+  until: string;
+};
+
+const MAX_INSIGHTS_WINDOW_DAYS = 30;
+
+function toUtcDate(value: string): Date {
+  return new Date(`${value}T00:00:00.000Z`);
+}
+
+function toDateParam(value: Date): string {
+  return value.toISOString().slice(0, 10);
+}
+
+function buildDateWindows(since: string, until: string): DateWindow[] {
+  const windows: DateWindow[] = [];
+  const rangeStart = toUtcDate(since);
+  const rangeEnd = toUtcDate(until);
+
+  let cursor = new Date(rangeStart);
+
+  while (cursor <= rangeEnd) {
+    const windowEnd = new Date(cursor);
+    windowEnd.setUTCDate(windowEnd.getUTCDate() + (MAX_INSIGHTS_WINDOW_DAYS - 1));
+
+    if (windowEnd > rangeEnd) {
+      windowEnd.setTime(rangeEnd.getTime());
+    }
+
+    windows.push({
+      since: toDateParam(cursor),
+      until: toDateParam(windowEnd),
+    });
+
+    cursor = new Date(windowEnd);
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return windows;
+}
+
+async function fetchInsightsWindow(
+  accountId: string,
+  window: DateWindow,
+): Promise<InstagramInsights> {
+  const [totalValueResponse, timeSeriesResponse, followsResponse] = await Promise.all([
+    metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "accounts_engaged,total_interactions,profile_links_taps,views",
+        period: "day",
+        metric_type: "total_value",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    }),
+    metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "reach",
+        period: "day",
+        metric_type: "time_series",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    }),
+    metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "follows_and_unfollows",
+        period: "day",
+        metric_type: "total_value",
+        breakdown: "follow_type",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    }),
+  ]);
+
+  return parseInsightsResponse(totalValueResponse, timeSeriesResponse, followsResponse);
+}
+
+function mergeInsights(windows: InstagramInsights[]): InstagramInsights {
+  return windows.reduce<InstagramInsights>(
+    (accumulator, current) => {
+      accumulator.reach.push(...current.reach);
+      accumulator.accounts_engaged += current.accounts_engaged;
+      accumulator.total_interactions += current.total_interactions;
+      accumulator.profile_links_taps += current.profile_links_taps;
+      accumulator.views += current.views;
+      accumulator.follows_and_unfollows.follows += current.follows_and_unfollows.follows;
+      accumulator.follows_and_unfollows.unfollows += current.follows_and_unfollows.unfollows;
+      accumulator.follows_and_unfollows.net += current.follows_and_unfollows.net;
+
+      return accumulator;
+    },
+    {
+      reach: [],
+      accounts_engaged: 0,
+      total_interactions: 0,
+      profile_links_taps: 0,
+      views: 0,
+      follows_and_unfollows: {
+        follows: 0,
+        unfollows: 0,
+        net: 0,
+      },
+    },
+  );
+}
+
 export async function fetchInstagramAccounts(): Promise<InstagramAccount[]> {
   const pagesResponse = await metaFetch<{ data: FacebookPage[] }>("me/accounts", {
     params: {
@@ -64,41 +176,16 @@ export async function fetchAccountInsights(
   since: string,
   until: string,
 ): Promise<InstagramInsights> {
-  const [totalValueResponse, timeSeriesResponse, followsResponse] = await Promise.all([
-    metaFetch(`${accountId}/insights`, {
-      params: {
-        metric: "accounts_engaged,total_interactions,profile_links_taps,views",
-        period: "day",
-        metric_type: "total_value",
-        since,
-        until,
-      },
-      revalidate: 1800,
-    }),
-    metaFetch(`${accountId}/insights`, {
-      params: {
-        metric: "reach",
-        period: "day",
-        metric_type: "time_series",
-        since,
-        until,
-      },
-      revalidate: 1800,
-    }),
-    metaFetch(`${accountId}/insights`, {
-      params: {
-        metric: "follows_and_unfollows",
-        period: "day",
-        metric_type: "total_value",
-        breakdown: "follow_type",
-        since,
-        until,
-      },
-      revalidate: 1800,
-    }),
-  ]);
+  const windows = buildDateWindows(since, until);
+  const insightsByWindow = await Promise.all(windows.map((window) => fetchInsightsWindow(accountId, window)));
+  const mergedInsights = mergeInsights(insightsByWindow);
 
-  return parseInsightsResponse(totalValueResponse, timeSeriesResponse, followsResponse);
+  return {
+    ...mergedInsights,
+    reach: mergedInsights.reach.sort(
+      (left, right) => new Date(left.end_time).getTime() - new Date(right.end_time).getTime(),
+    ),
+  };
 }
 
 export async function fetchDemographics(

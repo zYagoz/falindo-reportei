@@ -18,7 +18,13 @@ export function FollowerGrowthChart({ data }: FollowerGrowthChartProps) {
       <p className="mb-4 text-sm text-[var(--color-text-muted)]">
         Série temporal de alcance diário retornada pela Meta API.
       </p>
-      <LineChart data={chartData} dataKey="value" xKey="date" />
+      {chartData.length ? (
+        <LineChart data={chartData} dataKey="value" xKey="date" />
+      ) : (
+        <div className="flex h-72 items-center justify-center rounded-2xl bg-white/70 text-sm text-[var(--color-text-muted)]">
+          Sem dados de alcance para o período.
+        </div>
+      )}
     </div>
   );
 }
