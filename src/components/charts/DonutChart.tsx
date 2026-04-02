@@ -7,14 +7,16 @@ interface DonutChartProps<T> {
   data: T[];
   dataKey: keyof T;
   nameKey: keyof T;
+  colors?: string[];
 }
 
-const COLORS = ["#f97316", "#fb923c", "#fdba74", "#fed7aa"];
+const DEFAULT_COLORS = ["#f97316", "#fb923c", "#fdba74", "#fed7aa"];
 
 export function DonutChart<T extends Record<string, string | number>>({
   data,
   dataKey,
   nameKey,
+  colors = DEFAULT_COLORS,
 }: DonutChartProps<T>) {
   const { containerRef, isReady, size } = useChartContainerReady<HTMLDivElement>();
 
@@ -33,7 +35,7 @@ export function DonutChart<T extends Record<string, string | number>>({
             nameKey={nameKey as string}
           >
             {data.map((_, index) => (
-              <Cell key={index} fill={COLORS[index % COLORS.length]} />
+              <Cell key={index} fill={colors[index % colors.length]} />
             ))}
           </Pie>
           <Tooltip />

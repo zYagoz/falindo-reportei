@@ -31,7 +31,7 @@ test("redirects to instagram and renders dashboard shell", async ({ page }) => {
   await page.goto("/");
 
   await expect(page).toHaveURL(/\/instagram$/);
-  await expect(page.getByText("Social Insights Dashboard")).toBeVisible();
-  await expect(page.getByText("Últimos 30 dias")).toBeVisible();
-  await expect(page.getByText("Instagram")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Social Insights Dashboard", level: 1 })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Últimos 30 dias", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Instagram", exact: true })).toBeVisible();
 });
