@@ -28,6 +28,14 @@ export interface InstagramInsights {
   views: number;
 }
 
+export interface InstagramOverviewAggregate {
+  followers_count: number;
+  new_followers: number;
+  profile_views: number;
+  profile_reach: number;
+  profile_links_taps: number;
+}
+
 export interface PostInsights {
   views: number;
   reach: number;
@@ -69,6 +77,13 @@ export interface InstagramReel {
   insights: ReelInsights;
 }
 
+export interface InstagramReelsAggregate {
+  views: number;
+  reach: number;
+  total_interactions: number;
+  engagement_rate: number;
+}
+
 export interface GenderBreakdown {
   M: number;
   F: number;
@@ -92,4 +107,30 @@ export interface DemographicData {
   followers_by_city: CityBreakdown[];
   reached_by_age: AgeBreakdown[];
   engaged_by_age?: AgeBreakdown[];
+}
+
+export interface OnlineFollowersPoint {
+  value: number;
+  end_time: string;
+  hour?: number;
+  dateKey?: string;
+}
+
+export interface ActivityBucket {
+  label: string;
+  value: number;
+  sampleCount: number;
+  totalValue: number;
+  highlighted: boolean;
+}
+
+export interface InstagramActivity {
+  bestDay: ActivityBucket | null;
+  bestHour: ActivityBucket | null;
+  days: ActivityBucket[];
+  hours: ActivityBucket[];
+  effectiveSince: string;
+  effectiveUntil: string;
+  limitedToLast30Days: boolean;
+  emptyReason?: string;
 }

@@ -1,10 +1,20 @@
-export function BestHourChart() {
+import type { InstagramActivity } from "@/lib/types/instagram.types";
+import { ActivityBarCard } from "./ActivityBarCard";
+
+interface BestHourChartProps {
+  activity: InstagramActivity;
+}
+
+export function BestHourChart({ activity }: BestHourChartProps) {
   return (
-    <div className="card-surface rounded-[28px] p-5">
-      <h3 className="mb-2 text-lg font-semibold">Melhor horário para postar</h3>
-      <p className="text-sm text-[var(--color-text-muted)]">
-        Em breve. Este módulo será ativado quando o shape de activity estiver fechado.
-      </p>
-    </div>
+    <ActivityBarCard
+      buckets={activity.hours}
+      description="Média de seguidores online por faixa horária na janela disponível da Meta."
+      effectiveSince={activity.effectiveSince}
+      effectiveUntil={activity.effectiveUntil}
+      emptyReason={activity.emptyReason}
+      limitedToLast30Days={activity.limitedToLast30Days}
+      title="Melhor horário para postagens"
+    />
   );
 }

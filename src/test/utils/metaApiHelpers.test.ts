@@ -1,4 +1,7 @@
 import {
+  metaReelsInteractionsBreakdownResponse,
+  metaReelsReachBreakdownResponse,
+  metaReelsViewsBreakdownResponse,
   metaFollowersCityResponse,
   metaFollowersGenderResponse,
   metaFollowsResponse,
@@ -12,9 +15,18 @@ import {
   parseFollowersCity,
   parseFollowersGender,
   parseInsightsResponse,
+  parseReelsAggregate,
   parseReachedAge,
   parseReachTimeSeries,
 } from "@/lib/utils/metaApiHelpers";
+import {
+  metaFollowerCountSeriesResponse,
+  metaFollowersCountResponse,
+  metaOverviewReachBreakdownResponse,
+  metaProfileLinksTapsResponse,
+  metaProfileViewsSeriesResponse,
+} from "@/test/mocks/fixtures/meta";
+import { parseOverviewAggregate } from "@/lib/utils/metaApiHelpers";
 
 describe("metaApiHelpers", () => {
   it("parses insight totals and reach time series", () => {
@@ -67,6 +79,73 @@ describe("metaApiHelpers", () => {
     expect(parseFollowersGender({ data: [] })).toEqual({ M: 0, F: 0, U: 0 });
     expect(parseFollowersCity({ data: [] })).toEqual([]);
     expect(parseReachedAge({ data: [] })).toEqual([]);
+  });
+
+  it("parses aggregated reel metrics from media_product_type breakdown", () => {
+    expect(
+      parseReelsAggregate(
+        metaReelsViewsBreakdownResponse,
+        metaReelsReachBreakdownResponse,
+        metaReelsInteractionsBreakdownResponse,
+      ),
+    ).toEqual({
+      views: 17295,
+      reach: 3444,
+      total_interactions: 500,
+      engagement_rate: 14.52,
+    });
+  });
+
+  it("parses overview aggregate metrics and excludes ad buckets from reach", () => {
+    expect(
+      parseOverviewAggregate(
+        metaFollowersCountResponse.followers_count,
+        metaFollowerCountSeriesResponse,
+        metaProfileViewsSeriesResponse,
+        metaOverviewReachBreakdownResponse,
+        metaProfileLinksTapsResponse,
+      ),
+    ).toEqual({
+      followers_count: 3979,
+      new_followers: 120,
+      profile_views: 18200,
+      profile_reach: 9500,
+      profile_links_taps: 88,
+    });
+  });
+
+  it("returns zero for missing overview metrics", () => {
+    expect(
+      parseOverviewAggregate(
+        3979,
+        { data: [] },
+        { data: [] },
+        {
+          data: [
+            {
+              name: "reach",
+              total_value: {
+                breakdowns: [
+                  {
+                    results: [
+                      { dimension_values: ["AD"], value: 5000 },
+                      { dimension_values: ["DEFAULT_DO_NOT_USE"], value: 3000 },
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        { data: [] },
+      ),
+    ).toEqual({
+      followers_count: 3979,
+      new_followers: 0,
+      profile_views: 0,
+      profile_reach: 0,
+      profile_links_taps: 0,
+    });
   });
 
   it("throws a clear error for invalid structures", () => {

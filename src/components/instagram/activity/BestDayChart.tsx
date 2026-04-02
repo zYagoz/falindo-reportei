@@ -1,10 +1,20 @@
-export function BestDayChart() {
+import type { InstagramActivity } from "@/lib/types/instagram.types";
+import { ActivityBarCard } from "./ActivityBarCard";
+
+interface BestDayChartProps {
+  activity: InstagramActivity;
+}
+
+export function BestDayChart({ activity }: BestDayChartProps) {
   return (
-    <div className="card-surface rounded-[28px] p-5">
-      <h3 className="mb-2 text-lg font-semibold">Melhor dia para postar</h3>
-      <p className="text-sm text-[var(--color-text-muted)]">
-        Em breve. O MVP não inventa dados de atividade sem contrato explícito da API.
-      </p>
-    </div>
+    <ActivityBarCard
+      buckets={activity.days}
+      description="Média diária de seguidores online agregada por dia da semana na janela disponível da Meta."
+      effectiveSince={activity.effectiveSince}
+      effectiveUntil={activity.effectiveUntil}
+      emptyReason={activity.emptyReason}
+      limitedToLast30Days={activity.limitedToLast30Days}
+      title="Melhor dia para postagens"
+    />
   );
 }

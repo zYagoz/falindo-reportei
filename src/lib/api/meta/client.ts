@@ -44,3 +44,30 @@ export async function metaFetch<T>(
 
   return response.json() as Promise<T>;
 }
+
+export async function metaFetchAbsolute<T>(
+  url: string,
+  options: Pick<MetaApiOptions, "revalidate"> = {},
+): Promise<T> {
+  const { revalidate = 3600 } = options;
+  const response = await fetch(url, {
+    next: { revalidate },
+  });
+
+  if (!response.ok) {
+    const errorPayload = await response.json().catch(() => null);
+    const message =
+      errorPayload &&
+      typeof errorPayload === "object" &&
+      "error" in errorPayload &&
+      typeof errorPayload.error === "object" &&
+      errorPayload.error &&
+      "message" in errorPayload.error
+        ? String(errorPayload.error.message)
+        : `Meta API Error: ${response.status}`;
+
+    throw new Error(message);
+  }
+
+  return response.json() as Promise<T>;
+}

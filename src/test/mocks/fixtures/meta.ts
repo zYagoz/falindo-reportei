@@ -1,9 +1,13 @@
 import type {
+  ActivityBucket,
   DemographicData,
+  InstagramActivity,
   InstagramAccount,
   InstagramInsights,
+  InstagramOverviewAggregate,
   InstagramPost,
   InstagramReel,
+  InstagramReelsAggregate,
 } from "@/lib/types/instagram.types";
 
 export const instagramAccountsFixture: InstagramAccount[] = [
@@ -40,6 +44,22 @@ export const insightsFixture: InstagramInsights = {
     { end_time: "2026-03-31T00:00:00+0000", value: 5100 },
     { end_time: "2026-04-01T00:00:00+0000", value: 5300 },
   ],
+};
+
+export const overviewFixture: InstagramOverviewAggregate = {
+  followers_count: 3979,
+  new_followers: 120,
+  profile_views: 18200,
+  profile_reach: 9500,
+  profile_links_taps: 88,
+};
+
+export const previousOverviewFixture: InstagramOverviewAggregate = {
+  followers_count: 3910,
+  new_followers: 84,
+  profile_views: 13600,
+  profile_reach: 7200,
+  profile_links_taps: 42,
 };
 
 export const demographicsFixture: DemographicData = {
@@ -113,6 +133,56 @@ export const reelsFixture: InstagramReel[] = [
   },
 ];
 
+export const reelsSummaryFixture: InstagramReelsAggregate = {
+  views: 17295,
+  reach: 3444,
+  total_interactions: 500,
+  engagement_rate: 14.52,
+};
+
+export const previousReelsSummaryFixture: InstagramReelsAggregate = {
+  views: 7299,
+  reach: 1503,
+  total_interactions: 80,
+  engagement_rate: 5.32,
+};
+
+function createActivityBucket(
+  label: string,
+  value: number,
+  sampleCount: number,
+  totalValue: number,
+  highlighted = false,
+): ActivityBucket {
+  return { label, value, sampleCount, totalValue, highlighted };
+}
+
+export const activityFixture: InstagramActivity = {
+  bestDay: createActivityBucket("Qua", 108, 4, 432, true),
+  bestHour: createActivityBucket("7h", 96, 4, 384, true),
+  days: [
+    createActivityBucket("Dom", 88, 4, 352),
+    createActivityBucket("Seg", 94, 4, 376),
+    createActivityBucket("Ter", 82, 4, 328),
+    createActivityBucket("Qua", 108, 4, 432, true),
+    createActivityBucket("Qui", 84, 4, 336),
+    createActivityBucket("Sex", 78, 4, 312),
+    createActivityBucket("Sáb", 70, 4, 280),
+  ],
+  hours: Array.from({ length: 24 }, (_, hour) =>
+    createActivityBucket(
+      `${hour}h`,
+      [28, 56, 74, 80, 82, 84, 88, 96, 92, 89, 87, 88, 89, 88, 89, 87, 84, 78, 52, 30, 16, 10, 8, 12][hour],
+      4,
+      [112, 224, 296, 320, 328, 336, 352, 384, 368, 356, 348, 352, 356, 352, 356, 348, 336, 312, 208, 120, 64, 40, 32, 48][hour],
+      hour === 7,
+    ),
+  ),
+  effectiveSince: "2026-03-03",
+  effectiveUntil: "2026-04-01",
+  limitedToLast30Days: false,
+};
+
 export const metaPagesResponse = {
   data: [
     {
@@ -139,6 +209,75 @@ export const metaTotalInsightsResponse = {
     { name: "total_interactions", total_value: { value: 940 } },
     { name: "profile_links_taps", total_value: { value: 88 } },
     { name: "views", total_value: { value: 18200 } },
+  ],
+};
+
+export const metaFollowersCountResponse = {
+  followers_count: 3979,
+};
+
+export const metaFollowerCountSeriesResponse = {
+  data: [
+    {
+      name: "follower_count",
+      values: [
+        { value: 30, end_time: "2026-03-30T00:00:00+0000" },
+        { value: 40, end_time: "2026-03-31T00:00:00+0000" },
+        { value: 50, end_time: "2026-04-01T00:00:00+0000" },
+      ],
+    },
+  ],
+};
+
+export const metaProfileViewsSeriesResponse = {
+  data: [
+    {
+      name: "profile_views",
+      values: [
+        { value: 6000, end_time: "2026-03-30T00:00:00+0000" },
+        { value: 5900, end_time: "2026-03-31T00:00:00+0000" },
+        { value: 6300, end_time: "2026-04-01T00:00:00+0000" },
+      ],
+    },
+  ],
+};
+
+export const metaProfileViewsTotalValueResponse = {
+  data: [
+    {
+      name: "profile_views",
+      total_value: { value: 18200 },
+    },
+  ],
+};
+
+export const metaOverviewReachBreakdownResponse = {
+  data: [
+    {
+      name: "reach",
+      total_value: {
+        breakdowns: [
+          {
+            dimension_keys: ["media_product_type"],
+            results: [
+              { dimension_values: ["POST"], value: 1789 },
+              { dimension_values: ["REEL"], value: 3444 },
+              { dimension_values: ["STORY"], value: 4267 },
+              { dimension_values: ["AD"], value: 70736 },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+};
+
+export const metaProfileLinksTapsResponse = {
+  data: [
+    {
+      name: "profile_links_taps",
+      total_value: { value: 88 },
+    },
   ],
 };
 
@@ -271,4 +410,76 @@ export const metaApiErrorPayload = {
   error: {
     message: "Token expirado",
   },
+};
+
+export const metaOnlineFollowersResponse = {
+  data: [
+    {
+      name: "online_followers",
+      period: "lifetime",
+      values: [
+        { value: 80, end_time: "2026-03-30T03:00:00+0000" },
+        { value: 96, end_time: "2026-03-30T10:00:00+0000" },
+        { value: 84, end_time: "2026-03-31T10:00:00+0000" },
+        { value: 108, end_time: "2026-04-01T10:00:00+0000" },
+      ],
+    },
+  ],
+};
+
+export const metaReelsViewsBreakdownResponse = {
+  data: [
+    {
+      name: "views",
+      total_value: {
+        breakdowns: [
+          {
+            dimension_keys: ["media_product_type"],
+            results: [
+              { dimension_values: ["POST"], value: 11415 },
+              { dimension_values: ["REEL"], value: 17295 },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+};
+
+export const metaReelsReachBreakdownResponse = {
+  data: [
+    {
+      name: "reach",
+      total_value: {
+        breakdowns: [
+          {
+            dimension_keys: ["media_product_type"],
+            results: [
+              { dimension_values: ["POST"], value: 1789 },
+              { dimension_values: ["REEL"], value: 3444 },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+};
+
+export const metaReelsInteractionsBreakdownResponse = {
+  data: [
+    {
+      name: "total_interactions",
+      total_value: {
+        breakdowns: [
+          {
+            dimension_keys: ["media_product_type"],
+            results: [
+              { dimension_values: ["POST"], value: 315 },
+              { dimension_values: ["REEL"], value: 500 },
+            ],
+          },
+        ],
+      },
+    },
+  ],
 };

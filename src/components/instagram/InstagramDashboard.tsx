@@ -18,12 +18,15 @@ import { GenderDonutLegendChart } from "@/components/instagram/overview/GenderDo
 import { OverviewKPIs } from "@/components/instagram/overview/OverviewKPIs";
 import { TopCitiesTable } from "@/components/instagram/overview/TopCitiesTable";
 import { StoriesSummary } from "@/components/instagram/stories/StoriesSummary";
+import { useInstagramActivity } from "@/lib/hooks/useInstagramActivity";
 import { useDateRange } from "@/lib/hooks/useDateRange";
 import { useInstagramAccounts } from "@/lib/hooks/useInstagramAccounts";
 import { useInstagramDemographics } from "@/lib/hooks/useInstagramDemographics";
+import { useInstagramOverview } from "@/lib/hooks/useInstagramOverview";
 import { useInstagramInsights } from "@/lib/hooks/useInstagramInsights";
 import { useInstagramPosts } from "@/lib/hooks/useInstagramPosts";
 import { useInstagramReels } from "@/lib/hooks/useInstagramReels";
+import { useInstagramReelsSummary } from "@/lib/hooks/useInstagramReelsSummary";
 import type { InstagramAccount } from "@/lib/types/instagram.types";
 
 export function InstagramDashboard() {
@@ -35,7 +38,16 @@ export function InstagramDashboard() {
     selectedAccount?.id ?? null,
     activeRange,
   );
+  const { overview, loading: overviewLoading, error: overviewError } = useInstagramOverview(
+    selectedAccount?.id ?? null,
+    activeRange,
+  );
+  const { overview: previousOverview } = useInstagramOverview(selectedAccount?.id ?? null, previousRange);
   const { insights: previousInsights } = useInstagramInsights(selectedAccount?.id ?? null, previousRange);
+  const { activity, loading: activityLoading, error: activityError } = useInstagramActivity(
+    selectedAccount?.id ?? null,
+    activeRange,
+  );
   const demographicsTimeframe = useMemo(
     () => (activeRange.label === "Últimos 7 dias" ? "this_week" : "this_month"),
     [activeRange.label],
@@ -46,10 +58,27 @@ export function InstagramDashboard() {
     selectedAccount?.id ?? null,
     activeRange,
   );
+  const { posts: previousPosts, loading: previousPostsLoading, error: previousPostsError } = useInstagramPosts(
+    selectedAccount?.id ?? null,
+    previousRange,
+  );
   const { reels, loading: reelsLoading, error: reelsError } = useInstagramReels(
     selectedAccount?.id ?? null,
     activeRange,
   );
+  const { summary: reelsSummary, loading: reelsSummaryLoading, error: reelsSummaryError } = useInstagramReelsSummary(
+    selectedAccount?.id ?? null,
+    activeRange,
+  );
+  const { reels: previousReels, loading: previousReelsLoading, error: previousReelsError } = useInstagramReels(
+    selectedAccount?.id ?? null,
+    previousRange,
+  );
+  const {
+    summary: previousReelsSummary,
+    loading: previousReelsSummaryLoading,
+    error: previousReelsSummaryError,
+  } = useInstagramReelsSummary(selectedAccount?.id ?? null, previousRange);
 
   return (
     <div className="min-w-0 space-y-8 overflow-x-clip">
@@ -113,11 +142,13 @@ export function InstagramDashboard() {
             </div>
           </div>
         ) : null}
-        {selectedAccount && insightsLoading ? <LoadingSkeleton className="mb-4" lines={5} /> : null}
-        {selectedAccount && insightsError ? <ErrorMessage message={insightsError} /> : null}
-        {selectedAccount && insights ? (
+        {selectedAccount && (insightsLoading || overviewLoading) ? <LoadingSkeleton className="mb-4" lines={5} /> : null}
+        {selectedAccount && (insightsError || overviewError) ? (
+          <ErrorMessage message={insightsError ?? overviewError ?? "Falha ao carregar overview."} />
+        ) : null}
+        {selectedAccount && insights && overview ? (
           <div className="min-w-0 space-y-4">
-            <OverviewKPIs account={selectedAccount} insights={insights} previousInsights={previousInsights} />
+            <OverviewKPIs overview={overview} previousOverview={previousOverview} />
             <div className="grid min-w-0 gap-4 min-[1680px]:grid-cols-[minmax(0,1.4fr)_minmax(260px,1fr)_minmax(260px,1fr)]">
               <FollowerGrowthChart data={insights.reach} />
               {demographicsLoading ? <LoadingSkeleton lines={4} /> : null}
@@ -141,7 +172,12 @@ export function InstagramDashboard() {
           <ErrorMessage message={postsError} />
         ) : (
           <div className="min-w-0 space-y-4">
-            <FeedPostsSummary posts={posts} />
+            <FeedPostsSummary
+              posts={posts}
+              previousPosts={previousPostsLoading || previousPostsError ? undefined : previousPosts}
+              previousProfileVisits={previousInsights?.profile_links_taps}
+              profileVisits={insights?.profile_links_taps}
+            />
             <FeedPostsTable posts={posts} />
           </div>
         )}
@@ -149,13 +185,20 @@ export function InstagramDashboard() {
 
       <section>
         <SectionHeader eyebrow="03. Reels" title="Performance de reels" />
-        {!selectedAccount ? null : reelsLoading ? (
+        {!selectedAccount ? null : reelsLoading || reelsSummaryLoading ? (
           <LoadingSkeleton lines={6} />
-        ) : reelsError ? (
-          <ErrorMessage message={reelsError} />
+        ) : reelsError || reelsSummaryError ? (
+          <ErrorMessage message={reelsError ?? reelsSummaryError ?? "Falha ao carregar reels."} />
         ) : (
           <div className="min-w-0 space-y-4">
-            <ReelsSummary reels={reels} />
+            <ReelsSummary
+              previousReels={previousReelsLoading || previousReelsError ? undefined : previousReels}
+              previousSummary={
+                previousReelsSummaryLoading || previousReelsSummaryError ? undefined : (previousReelsSummary ?? undefined)
+              }
+              reels={reels}
+              summary={reelsSummary ?? { views: 0, reach: 0, total_interactions: 0, engagement_rate: 0 }}
+            />
             <ReelsTable reels={reels} />
           </div>
         )}
@@ -163,8 +206,38 @@ export function InstagramDashboard() {
 
       <section className="grid gap-4 xl:grid-cols-3">
         <StoriesSummary />
-        <BestDayChart />
-        <BestHourChart />
+        {!selectedAccount ? (
+          <>
+            <div className="card-surface rounded-[28px] p-5">
+              <h3 className="mb-2 text-lg font-semibold">Melhor dia para postagens</h3>
+              <p className="text-sm text-[var(--color-text-muted)]">Selecione uma conta para carregar activity.</p>
+            </div>
+            <div className="card-surface rounded-[28px] p-5">
+              <h3 className="mb-2 text-lg font-semibold">Melhor horário para postagens</h3>
+              <p className="text-sm text-[var(--color-text-muted)]">Selecione uma conta para carregar activity.</p>
+            </div>
+          </>
+        ) : activityLoading ? (
+          <>
+            <LoadingSkeleton lines={5} />
+            <LoadingSkeleton lines={5} />
+          </>
+        ) : activityError ? (
+          <>
+            <ErrorMessage message={activityError} />
+            <ErrorMessage message={activityError} />
+          </>
+        ) : activity ? (
+          <>
+            <BestDayChart activity={activity} />
+            <BestHourChart activity={activity} />
+          </>
+        ) : (
+          <>
+            <StoriesSummary />
+            <StoriesSummary />
+          </>
+        )}
       </section>
     </div>
   );

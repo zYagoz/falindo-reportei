@@ -1,20 +1,27 @@
 import type {
   DemographicData,
+  InstagramActivity,
   InstagramAccount,
   InstagramInsights,
+  InstagramOverviewAggregate,
   InstagramPost,
   InstagramReel,
+  InstagramReelsAggregate,
   PostInsights,
   ReelInsights,
 } from "@/lib/types/instagram.types";
 import { calculateEngagementRate } from "@/lib/utils/formatters";
 import {
+  buildInstagramActivity,
+  parseOverviewAggregate,
+  parseReelsAggregate,
   parseDemographicsResponse,
+  parseOnlineFollowersSeries,
   parseInsightsResponse,
   parsePostInsights,
   parseReelInsights,
 } from "@/lib/utils/metaApiHelpers";
-import { metaFetch } from "./client";
+import { metaFetch, metaFetchAbsolute } from "./client";
 
 type FacebookPage = {
   id: string;
@@ -37,12 +44,30 @@ type MetaMedia = {
   timestamp: string;
 };
 
+type MetaUserResponse = {
+  followers_count?: number;
+};
+
 type DateWindow = {
   since: string;
   until: string;
 };
 
+type OnlineFollowersResponse = {
+  data?: Array<{
+    values?: Array<{
+      value?: number | Record<string, number>;
+      end_time?: string;
+    }>;
+  }>;
+  paging?: {
+    previous?: string;
+    next?: string;
+  };
+};
+
 const MAX_INSIGHTS_WINDOW_DAYS = 30;
+const ONLINE_FOLLOWERS_PAGE_LIMIT = 20;
 
 function toUtcDate(value: string): Date {
   return new Date(`${value}T00:00:00.000Z`);
@@ -77,6 +102,43 @@ function buildDateWindows(since: string, until: string): DateWindow[] {
   }
 
   return windows;
+}
+
+function countDistinctActivityDates(
+  points: Array<{
+    end_time: string;
+  }>,
+): number {
+  return new Set(points.map((point) => point.end_time.slice(0, 10))).size;
+}
+
+async function fetchOnlineFollowersPages(accountId: string): Promise<OnlineFollowersResponse[]> {
+  const pages: OnlineFollowersResponse[] = [];
+  let currentPage = await metaFetch<OnlineFollowersResponse>(`${accountId}/insights`, {
+    params: {
+      metric: "online_followers",
+      period: "lifetime",
+    },
+    revalidate: 1800,
+  });
+
+  pages.push(currentPage);
+
+  let pageCount = 1;
+  let distinctDates = countDistinctActivityDates(parseOnlineFollowersSeries(currentPage));
+
+  while (currentPage.paging?.previous && distinctDates < 30 && pageCount < ONLINE_FOLLOWERS_PAGE_LIMIT) {
+    currentPage = await metaFetchAbsolute<OnlineFollowersResponse>(currentPage.paging.previous, {
+      revalidate: 1800,
+    });
+    pages.push(currentPage);
+    pageCount += 1;
+    distinctDates = countDistinctActivityDates(
+      pages.flatMap((page) => parseOnlineFollowersSeries(page)),
+    );
+  }
+
+  return pages;
 }
 
 async function fetchInsightsWindow(
@@ -120,6 +182,106 @@ async function fetchInsightsWindow(
   return parseInsightsResponse(totalValueResponse, timeSeriesResponse, followsResponse);
 }
 
+async function fetchOverviewWindow(
+  accountId: string,
+  window: DateWindow,
+  followersCount: number,
+): Promise<InstagramOverviewAggregate> {
+  const [followerCountResponse, profileViewsResponse, reachResponse, linkTapsResponse] = await Promise.all([
+    metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "follower_count",
+        period: "day",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    }),
+    metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "profile_views",
+        period: "day",
+        metric_type: "total_value",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    }),
+    metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "reach",
+        period: "day",
+        metric_type: "total_value",
+        breakdown: "media_product_type",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    }),
+    metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "profile_links_taps",
+        period: "day",
+        metric_type: "total_value",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    }),
+  ]);
+
+  return parseOverviewAggregate(
+    followersCount,
+    followerCountResponse,
+    profileViewsResponse,
+    reachResponse,
+    linkTapsResponse,
+  );
+}
+
+async function fetchReelsAggregateWindow(
+  accountId: string,
+  window: DateWindow,
+): Promise<InstagramReelsAggregate> {
+  const [viewsResponse, reachResponse, interactionsResponse] = await Promise.all([
+    metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "views",
+        period: "day",
+        metric_type: "total_value",
+        breakdown: "media_product_type",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    }),
+    metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "reach",
+        period: "day",
+        metric_type: "total_value",
+        breakdown: "media_product_type",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    }),
+    metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "total_interactions",
+        period: "day",
+        metric_type: "total_value",
+        breakdown: "media_product_type",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    }),
+  ]);
+
+  return parseReelsAggregate(viewsResponse, reachResponse, interactionsResponse);
+}
+
 function mergeInsights(windows: InstagramInsights[]): InstagramInsights {
   return windows.reduce<InstagramInsights>(
     (accumulator, current) => {
@@ -149,6 +311,47 @@ function mergeInsights(windows: InstagramInsights[]): InstagramInsights {
   );
 }
 
+function mergeOverviewAggregates(
+  followersCount: number,
+  windows: InstagramOverviewAggregate[],
+): InstagramOverviewAggregate {
+  return windows.reduce<InstagramOverviewAggregate>(
+    (accumulator, current) => {
+      accumulator.new_followers += current.new_followers;
+      accumulator.profile_views += current.profile_views;
+      accumulator.profile_reach += current.profile_reach;
+      accumulator.profile_links_taps += current.profile_links_taps;
+      return accumulator;
+    },
+    {
+      followers_count: followersCount,
+      new_followers: 0,
+      profile_views: 0,
+      profile_reach: 0,
+      profile_links_taps: 0,
+    },
+  );
+}
+
+function mergeReelsAggregates(windows: InstagramReelsAggregate[]): InstagramReelsAggregate {
+  const totals = windows.reduce(
+    (accumulator, current) => {
+      accumulator.views += current.views;
+      accumulator.reach += current.reach;
+      accumulator.total_interactions += current.total_interactions;
+      return accumulator;
+    },
+    { views: 0, reach: 0, total_interactions: 0 },
+  );
+
+  return {
+    ...totals,
+    engagement_rate: totals.reach
+      ? Number(((totals.total_interactions / totals.reach) * 100).toFixed(2))
+      : 0,
+  };
+}
+
 export async function fetchInstagramAccounts(): Promise<InstagramAccount[]> {
   const pagesResponse = await metaFetch<{ data: FacebookPage[] }>("me/accounts", {
     params: {
@@ -169,6 +372,26 @@ export async function fetchInstagramAccounts(): Promise<InstagramAccount[]> {
       pageId: page.id,
       pageName: page.name,
     }));
+}
+
+export async function fetchOverviewAggregate(
+  accountId: string,
+  since: string,
+  until: string,
+): Promise<InstagramOverviewAggregate> {
+  const userResponse = await metaFetch<MetaUserResponse>(accountId, {
+    params: {
+      fields: "followers_count",
+    },
+    revalidate: 1800,
+  });
+  const followersCount = userResponse.followers_count ?? 0;
+  const windows = buildDateWindows(since, until);
+  const overviewByWindow = await Promise.all(
+    windows.map((window) => fetchOverviewWindow(accountId, window, followersCount)),
+  );
+
+  return mergeOverviewAggregates(followersCount, overviewByWindow);
 }
 
 export async function fetchAccountInsights(
@@ -313,6 +536,19 @@ export async function fetchReels(
   );
 }
 
+export async function fetchReelsAggregate(
+  accountId: string,
+  since: string,
+  until: string,
+): Promise<InstagramReelsAggregate> {
+  const windows = buildDateWindows(since, until);
+  const aggregates = await Promise.all(
+    windows.map((window) => fetchReelsAggregateWindow(accountId, window)),
+  );
+
+  return mergeReelsAggregates(aggregates);
+}
+
 export async function fetchReelInsights(reelId: string): Promise<ReelInsights> {
   const response = await metaFetch(`${reelId}/insights`, {
     params: {
@@ -327,4 +563,31 @@ export async function fetchReelInsights(reelId: string): Promise<ReelInsights> {
     ...parsed,
     engagement_rate: calculateEngagementRate(parsed.total_interactions, parsed.reach),
   };
+}
+
+export async function fetchOnlineFollowersActivity(
+  accountId: string,
+  since: string,
+  until: string,
+): Promise<InstagramActivity> {
+  try {
+    const responses = await fetchOnlineFollowersPages(accountId);
+    const points = responses.flatMap((response) => parseOnlineFollowersSeries(response));
+
+    return buildInstagramActivity(points, since, until);
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      (error.message.toLowerCase().includes("100 followers") ||
+        error.message.toLowerCase().includes("online_followers") ||
+        error.message.toLowerCase().includes("not enough"))
+    ) {
+      return {
+        ...buildInstagramActivity([], since, until),
+        emptyReason: "Dados indisponíveis para contas com menos de 100 seguidores.",
+      };
+    }
+
+    throw error;
+  }
 }
