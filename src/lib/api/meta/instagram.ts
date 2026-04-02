@@ -13,11 +13,13 @@ import type {
 import { calculateEngagementRate } from "@/lib/utils/formatters";
 import {
   buildInstagramActivity,
-  parseOverviewAggregate,
   parseReelsAggregate,
   parseDemographicsResponse,
   parseOnlineFollowersSeries,
+  parseFollowsAndUnfollows,
   parseInsightsResponse,
+  parseMetricAggregateTotal,
+  parseMetricTotalValue,
   parsePostInsights,
   parseReelInsights,
 } from "@/lib/utils/metaApiHelpers";
@@ -187,16 +189,8 @@ async function fetchOverviewWindow(
   window: DateWindow,
   followersCount: number,
 ): Promise<InstagramOverviewAggregate> {
-  const [followerCountResponse, profileViewsResponse, reachResponse, linkTapsResponse] = await Promise.all([
-    metaFetch(`${accountId}/insights`, {
-      params: {
-        metric: "follower_count",
-        period: "day",
-        since: window.since,
-        until: window.until,
-      },
-      revalidate: 1800,
-    }),
+  const [newFollowers, profileViewsResponse, reachResponse, linkTapsResponse] = await Promise.all([
+    fetchOverviewNewFollowers(accountId, window),
     metaFetch(`${accountId}/insights`, {
       params: {
         metric: "profile_views",
@@ -212,7 +206,6 @@ async function fetchOverviewWindow(
         metric: "reach",
         period: "day",
         metric_type: "total_value",
-        breakdown: "media_product_type",
         since: window.since,
         until: window.until,
       },
@@ -230,13 +223,54 @@ async function fetchOverviewWindow(
     }),
   ]);
 
-  return parseOverviewAggregate(
-    followersCount,
-    followerCountResponse,
-    profileViewsResponse,
-    reachResponse,
-    linkTapsResponse,
+  return {
+    followers_count: followersCount,
+    new_followers: newFollowers,
+    profile_views: parseMetricAggregateTotal(profileViewsResponse, "profile_views"),
+    profile_reach: parseMetricAggregateTotal(reachResponse, "reach"),
+    profile_links_taps: parseMetricTotalValue(linkTapsResponse, "profile_links_taps"),
+  };
+}
+
+function isFollowerCountTrailingWindowError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    error.message.includes("(follower_count) metric only supports querying data for the last 30 days excluding the current day")
   );
+}
+
+async function fetchOverviewNewFollowers(accountId: string, window: DateWindow): Promise<number> {
+  try {
+    const followerCountResponse = await metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "follower_count",
+        period: "day",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    });
+
+    return parseMetricAggregateTotal(followerCountResponse, "follower_count");
+  } catch (error) {
+    if (!isFollowerCountTrailingWindowError(error)) {
+      throw error;
+    }
+
+    const followsResponse = await metaFetch(`${accountId}/insights`, {
+      params: {
+        metric: "follows_and_unfollows",
+        period: "day",
+        metric_type: "total_value",
+        breakdown: "follow_type",
+        since: window.since,
+        until: window.until,
+      },
+      revalidate: 1800,
+    });
+
+    return parseFollowsAndUnfollows(followsResponse).follows;
+  }
 }
 
 async function fetchReelsAggregateWindow(

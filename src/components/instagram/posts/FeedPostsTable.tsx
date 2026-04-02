@@ -1,4 +1,4 @@
-import type { InstagramPost } from "@/lib/types/instagram.types";
+﻿import type { InstagramPost } from "@/lib/types/instagram.types";
 import { calculateEngagementRate, formatDate, formatNumber, formatPercent } from "@/lib/utils/formatters";
 import { DataTable } from "@/components/common/DataTable";
 
@@ -19,7 +19,6 @@ export function FeedPostsTable({ posts }: FeedPostsTableProps) {
             {[
               "Postagem",
               "Criado em",
-              "Impressões",
               "Alcance",
               "Curtidas",
               "Comentários",
@@ -60,7 +59,6 @@ export function FeedPostsTable({ posts }: FeedPostsTableProps) {
                   </div>
                 </td>
                 <td className="px-4 py-3">{formatDate(post.timestamp)}</td>
-                <td className="px-4 py-3">{post.insights.views > 0 ? formatNumber(post.insights.views) : "—"}</td>
                 <td className="px-4 py-3">{formatNumber(post.insights.reach)}</td>
                 <td className="px-4 py-3">{formatNumber(post.insights.likes)}</td>
                 <td className="px-4 py-3">{formatNumber(post.insights.comments)}</td>

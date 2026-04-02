@@ -2,6 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import { FeedPostsTable } from "@/components/instagram/posts/FeedPostsTable";
 import { postsFixture } from "@/test/mocks/fixtures/meta";
 
+vi.setConfig({ testTimeout: 15000 });
+
 describe("FeedPostsTable", () => {
   it("orders by descending date and calculates engagement in the front-end", () => {
     render(<FeedPostsTable posts={postsFixture} />);

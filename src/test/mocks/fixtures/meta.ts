@@ -251,6 +251,15 @@ export const metaProfileViewsTotalValueResponse = {
   ],
 };
 
+export const metaOverviewReachTotalValueResponse = {
+  data: [
+    {
+      name: "reach",
+      total_value: { value: 9500 },
+    },
+  ],
+};
+
 export const metaOverviewReachBreakdownResponse = {
   data: [
     {

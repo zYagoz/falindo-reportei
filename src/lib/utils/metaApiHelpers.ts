@@ -438,10 +438,7 @@ export function parseOverviewAggregate(
     followers_count: followersCount,
     new_followers: parseMetricAggregateTotal(followerCountResponse, "follower_count"),
     profile_views: parseMetricAggregateTotal(profileViewsResponse, "profile_views"),
-    profile_reach: parseMetricBreakdownTotalValueExcluding(reachResponse, "reach", [
-      "AD",
-      "DEFAULT_DO_NOT_USE",
-    ]),
+    profile_reach: parseMetricAggregateTotal(reachResponse, "reach"),
     profile_links_taps: parseMetricTotalValue(linkTapsResponse, "profile_links_taps"),
   };
 }

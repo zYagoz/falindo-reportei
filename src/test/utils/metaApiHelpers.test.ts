@@ -15,6 +15,11 @@ import {
   parseFollowersCity,
   parseFollowersGender,
   parseInsightsResponse,
+  parseMetricAggregateTotal,
+  parseMetricBreakdownTotalValueExcluding,
+  parseMetricTotalValue,
+  parsePostInsights,
+  parseReelInsights,
   parseReelsAggregate,
   parseReachedAge,
   parseReachTimeSeries,
@@ -23,8 +28,11 @@ import {
   metaFollowerCountSeriesResponse,
   metaFollowersCountResponse,
   metaOverviewReachBreakdownResponse,
+  metaOverviewReachTotalValueResponse,
+  metaPostInsightsResponse,
   metaProfileLinksTapsResponse,
   metaProfileViewsSeriesResponse,
+  metaReelInsightsResponse,
 } from "@/test/mocks/fixtures/meta";
 import { parseOverviewAggregate } from "@/lib/utils/metaApiHelpers";
 
@@ -79,6 +87,7 @@ describe("metaApiHelpers", () => {
     expect(parseFollowersGender({ data: [] })).toEqual({ M: 0, F: 0, U: 0 });
     expect(parseFollowersCity({ data: [] })).toEqual([]);
     expect(parseReachedAge({ data: [] })).toEqual([]);
+    expect(parseFollowsAndUnfollows({ data: [] })).toEqual({ follows: 0, unfollows: 0, net: 0 });
   });
 
   it("parses aggregated reel metrics from media_product_type breakdown", () => {
@@ -102,7 +111,7 @@ describe("metaApiHelpers", () => {
         metaFollowersCountResponse.followers_count,
         metaFollowerCountSeriesResponse,
         metaProfileViewsSeriesResponse,
-        metaOverviewReachBreakdownResponse,
+        metaOverviewReachTotalValueResponse,
         metaProfileLinksTapsResponse,
       ),
     ).toEqual({
@@ -124,16 +133,7 @@ describe("metaApiHelpers", () => {
           data: [
             {
               name: "reach",
-              total_value: {
-                breakdowns: [
-                  {
-                    results: [
-                      { dimension_values: ["AD"], value: 5000 },
-                      { dimension_values: ["DEFAULT_DO_NOT_USE"], value: 3000 },
-                    ],
-                  },
-                ],
-              },
+              total_value: { value: 0 },
             },
           ],
         },
@@ -146,6 +146,63 @@ describe("metaApiHelpers", () => {
       profile_reach: 0,
       profile_links_taps: 0,
     });
+  });
+
+  it("reads metric totals from both total_value and series payloads", () => {
+    expect(parseMetricTotalValue(metaTotalInsightsResponse, "views")).toBe(18200);
+    expect(parseMetricTotalValue(metaProfileViewsSeriesResponse, "profile_views")).toBe(6300);
+    expect(parseMetricAggregateTotal(metaProfileViewsSeriesResponse, "profile_views")).toBe(18200);
+  });
+
+  it("sums breakdown values while excluding ad dimensions", () => {
+    expect(
+      parseMetricBreakdownTotalValueExcluding(metaOverviewReachBreakdownResponse, "reach", [
+        "AD",
+        "DEFAULT_DO_NOT_USE",
+      ]),
+    ).toBe(9500);
+  });
+
+  it("parses post and reel insights payloads", () => {
+    expect(parsePostInsights(metaPostInsightsResponse)).toEqual(
+      expect.objectContaining({
+        reach: 2500,
+        likes: 240,
+        follows: 12,
+        total_interactions: 313,
+      }),
+    );
+    expect(parseReelInsights(metaReelInsightsResponse)).toEqual(
+      expect.objectContaining({
+        views: 12000,
+        shares: 51,
+        total_interactions: 550,
+      }),
+    );
+  });
+
+  it("falls back to unknown labels when demographics breakdowns are partial", () => {
+    expect(
+      parseFollowersCity({
+        data: [
+          {
+            name: "follower_demographics",
+            total_value: { breakdowns: [{ results: [{ value: 22 }] }] },
+          },
+        ],
+      }),
+    ).toEqual([{ city: "Desconhecida", value: 22 }]);
+
+    expect(
+      parseReachedAge({
+        data: [
+          {
+            name: "reached_audience_demographics",
+            total_value: { breakdowns: [{ results: [{ value: 14 }] }] },
+          },
+        ],
+      }),
+    ).toEqual([{ range: "unknown", M: 0, F: 0, U: 14 }]);
   });
 
   it("throws a clear error for invalid structures", () => {

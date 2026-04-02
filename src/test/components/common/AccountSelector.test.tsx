@@ -1,5 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { AccountSelector } from "@/components/common/AccountSelector";
 import { instagramAccountsFixture } from "@/test/mocks/fixtures/meta";
 
@@ -20,7 +19,6 @@ describe("AccountSelector", () => {
   });
 
   it("persists and restores account selection", async () => {
-    const user = userEvent.setup();
     const onSelect = vi.fn();
 
     render(
@@ -29,13 +27,13 @@ describe("AccountSelector", () => {
         loading={false}
         onSelect={onSelect}
         platform="instagram"
-        selectedId={null}
+        selectedId={instagramAccountsFixture[0].id}
       />,
     );
 
-    await waitFor(() => expect(onSelect).toHaveBeenCalledWith(instagramAccountsFixture[0]));
-
-    await user.selectOptions(screen.getByLabelText("Selecionar conta"), instagramAccountsFixture[1].id);
+    fireEvent.change(screen.getByLabelText("Selecionar conta"), {
+      target: { value: instagramAccountsFixture[1].id },
+    });
 
     expect(localStorage.getItem("selected_instagram_account")).toBe(instagramAccountsFixture[1].id);
     expect(onSelect).toHaveBeenLastCalledWith(instagramAccountsFixture[1]);

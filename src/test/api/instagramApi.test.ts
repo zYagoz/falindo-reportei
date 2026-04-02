@@ -8,6 +8,7 @@ import {
   metaMediaResponse,
   metaOnlineFollowersResponse,
   metaPagesResponse,
+  metaOverviewReachTotalValueResponse,
   metaPostInsightsResponse,
   metaProfileLinksTapsResponse,
   metaProfileViewsSeriesResponse,
@@ -131,7 +132,7 @@ describe("instagram api layer", () => {
       .mockResolvedValueOnce(metaFollowersCountResponse)
       .mockResolvedValueOnce(metaFollowerCountSeriesResponse)
       .mockResolvedValueOnce(metaProfileViewsTotalValueResponse)
-      .mockResolvedValueOnce(metaOverviewReachBreakdownResponse)
+      .mockResolvedValueOnce(metaOverviewReachTotalValueResponse)
       .mockResolvedValueOnce(metaProfileLinksTapsResponse);
 
     const overview = await fetchOverviewAggregate("ig-1", "2026-03-30", "2026-04-01");
@@ -176,7 +177,7 @@ describe("instagram api layer", () => {
       }
 
       if (metric === "reach") {
-        return Promise.resolve(metaOverviewReachBreakdownResponse);
+        return Promise.resolve(metaOverviewReachTotalValueResponse);
       }
 
       return Promise.resolve(metaProfileLinksTapsResponse);
@@ -198,6 +199,58 @@ describe("instagram api layer", () => {
       profile_reach: 28500,
       profile_links_taps: 264,
     });
+  });
+
+  it("falls back to follows_and_unfollows when follower_count is unavailable for the previous window", async () => {
+    metaFetchMock.mockImplementation((endpoint: string, options?: { params?: Record<string, string> }) => {
+      if (endpoint === "ig-1") {
+        return Promise.resolve(metaFollowersCountResponse);
+      }
+
+      const metric = options?.params?.metric;
+
+      if (metric === "follower_count") {
+        return Promise.reject(
+          new Error(
+            "(#100) (follower_count) metric only supports querying data for the last 30 days excluding the current day",
+          ),
+        );
+      }
+
+      if (metric === "follows_and_unfollows") {
+        return Promise.resolve(metaFollowsResponse);
+      }
+
+      if (metric === "profile_views") {
+        return Promise.resolve(metaProfileViewsTotalValueResponse);
+      }
+
+      if (metric === "reach") {
+        return Promise.resolve(metaOverviewReachTotalValueResponse);
+      }
+
+      return Promise.resolve(metaProfileLinksTapsResponse);
+    });
+
+    const overview = await fetchOverviewAggregate("ig-1", "2026-02-02", "2026-03-03");
+
+    expect(overview).toEqual({
+      followers_count: 3979,
+      new_followers: 120,
+      profile_views: 18200,
+      profile_reach: 9500,
+      profile_links_taps: 88,
+    });
+    expect(metaFetchMock).toHaveBeenCalledWith(
+      "ig-1/insights",
+      expect.objectContaining({
+        params: expect.objectContaining({
+          metric: "follows_and_unfollows",
+          breakdown: "follow_type",
+          metric_type: "total_value",
+        }),
+      }),
+    );
   });
 
   it("separates feed posts from reels and normalizes insights", async () => {
