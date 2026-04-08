@@ -1,12 +1,12 @@
-"use client";
+﻿"use client";
 
-import type { DateRange } from "@/lib/types/common.types";
+import type { DatePreset, DateRange } from "@/lib/types/common.types";
 import { formatShortDate } from "@/lib/utils/dateUtils";
 
 interface DateRangePickerProps {
   activeRange: DateRange;
   selectedPreset: number;
-  presets: readonly { label: string; days: number }[];
+  presets: readonly DatePreset[];
   onPresetChange: (index: number) => void;
   onCustomRangeChange?: (since: string, until: string) => void;
 }

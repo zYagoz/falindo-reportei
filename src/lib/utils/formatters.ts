@@ -10,6 +10,13 @@ export function formatNumber(value: number): string {
   return value.toLocaleString("pt-BR");
 }
 
+export function formatFullNumber(value: number, maximumFractionDigits = 2): string {
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits,
+  });
+}
+
 export function formatPercent(value: number): string {
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }

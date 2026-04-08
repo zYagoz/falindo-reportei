@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Platform } from "@/lib/types/common.types";
 import type { InstagramAccount } from "@/lib/types/instagram.types";
 
@@ -14,6 +14,14 @@ interface AccountSelectorProps {
   platform: Platform;
 }
 
+function InitialsAvatar({ name }: { name: string }) {
+  return (
+    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-primary)] text-sm font-semibold text-white">
+      {name.slice(0, 2).toUpperCase()}
+    </div>
+  );
+}
+
 export function AccountSelector({
   accounts,
   selectedId,
@@ -21,6 +29,8 @@ export function AccountSelector({
   loading,
   platform,
 }: AccountSelectorProps) {
+  const [imageFailed, setImageFailed] = useState(false);
+
   useEffect(() => {
     if (loading || !accounts.length) {
       return;
@@ -38,6 +48,12 @@ export function AccountSelector({
       onSelect(accounts[0]);
     }
   }, [accounts, loading, onSelect, selectedId]);
+
+  const selectedAccount = accounts.find((account) => account.id === selectedId);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [selectedAccount?.id, selectedAccount?.profile_picture_url]);
 
   function handleChange(accountId: string) {
     const account = accounts.find((item) => item.id === accountId);
@@ -57,8 +73,6 @@ export function AccountSelector({
       </div>
     );
   }
-
-  const selectedAccount = accounts.find((account) => account.id === selectedId);
 
   return (
     <div className="card-surface min-w-0 rounded-[24px] p-5">
@@ -80,17 +94,16 @@ export function AccountSelector({
         </select>
         {selectedAccount ? (
           <div className="flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl bg-[var(--color-primary)]/8 px-4 py-3">
-            {selectedAccount.profile_picture_url ? (
+            {selectedAccount.profile_picture_url && !imageFailed ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 alt={selectedAccount.name}
                 className="h-11 w-11 rounded-full object-cover"
+                onError={() => setImageFailed(true)}
                 src={selectedAccount.profile_picture_url}
               />
             ) : (
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-primary)] text-sm font-semibold text-white">
-                {selectedAccount.name.slice(0, 2).toUpperCase()}
-              </div>
+              <InitialsAvatar name={selectedAccount.name} />
             )}
             <div className="min-w-0">
               <p className="truncate font-semibold">{selectedAccount.name}</p>

@@ -4,6 +4,13 @@ export interface DateRange {
   label: string;
 }
 
+export interface DatePreset {
+  label: string;
+  kind: "days" | "calendar";
+  days?: number;
+  calendarRange?: "current_month" | "previous_month";
+}
+
 export interface MetricVariation {
   current: number;
   previous: number;

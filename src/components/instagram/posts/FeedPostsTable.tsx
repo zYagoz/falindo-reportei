@@ -1,5 +1,5 @@
 ﻿import type { InstagramPost } from "@/lib/types/instagram.types";
-import { calculateEngagementRate, formatDate, formatNumber, formatPercent } from "@/lib/utils/formatters";
+import { calculateEngagementRate, formatDate, formatFullNumber, formatPercent } from "@/lib/utils/formatters";
 import { DataTable } from "@/components/common/DataTable";
 
 interface FeedPostsTableProps {
@@ -59,13 +59,13 @@ export function FeedPostsTable({ posts }: FeedPostsTableProps) {
                   </div>
                 </td>
                 <td className="px-4 py-3">{formatDate(post.timestamp)}</td>
-                <td className="px-4 py-3">{formatNumber(post.insights.reach)}</td>
-                <td className="px-4 py-3">{formatNumber(post.insights.likes)}</td>
-                <td className="px-4 py-3">{formatNumber(post.insights.comments)}</td>
-                <td className="px-4 py-3">{formatNumber(post.insights.saved)}</td>
-                <td className="px-4 py-3">{formatNumber(post.insights.shares)}</td>
-                <td className="px-4 py-3">{formatNumber(post.insights.follows)}</td>
-                <td className="px-4 py-3">{formatNumber(post.insights.total_interactions)}</td>
+                <td className="px-4 py-3">{formatFullNumber(post.insights.reach)}</td>
+                <td className="px-4 py-3">{formatFullNumber(post.insights.likes)}</td>
+                <td className="px-4 py-3">{formatFullNumber(post.insights.comments)}</td>
+                <td className="px-4 py-3">{formatFullNumber(post.insights.saved)}</td>
+                <td className="px-4 py-3">{formatFullNumber(post.insights.shares)}</td>
+                <td className="px-4 py-3">{formatFullNumber(post.insights.follows)}</td>
+                <td className="px-4 py-3">{formatFullNumber(post.insights.total_interactions)}</td>
                 <td className="px-4 py-3 font-semibold">{formatPercent(engagementRate)}</td>
               </tr>
             );

@@ -1,5 +1,5 @@
 import type { InstagramReel } from "@/lib/types/instagram.types";
-import { formatDate, formatNumber, formatPercent } from "@/lib/utils/formatters";
+import { formatDate, formatFullNumber, formatPercent } from "@/lib/utils/formatters";
 import { DataTable } from "@/components/common/DataTable";
 
 interface ReelsTableProps {
@@ -44,11 +44,11 @@ export function ReelsTable({ reels }: ReelsTableProps) {
                 </div>
               </td>
               <td className="px-4 py-3">{formatDate(reel.timestamp)}</td>
-              <td className="px-4 py-3">{formatNumber(reel.insights.views)}</td>
-              <td className="px-4 py-3">{formatNumber(reel.insights.reach)}</td>
-              <td className="px-4 py-3">{formatNumber(reel.insights.likes)}</td>
-              <td className="px-4 py-3">{formatNumber(reel.insights.comments)}</td>
-              <td className="px-4 py-3">{formatNumber(reel.insights.total_interactions)}</td>
+              <td className="px-4 py-3">{formatFullNumber(reel.insights.views)}</td>
+              <td className="px-4 py-3">{formatFullNumber(reel.insights.reach)}</td>
+              <td className="px-4 py-3">{formatFullNumber(reel.insights.likes)}</td>
+              <td className="px-4 py-3">{formatFullNumber(reel.insights.comments)}</td>
+              <td className="px-4 py-3">{formatFullNumber(reel.insights.total_interactions)}</td>
               <td className="px-4 py-3 font-semibold">{formatPercent(reel.insights.engagement_rate)}</td>
             </tr>
           ))}

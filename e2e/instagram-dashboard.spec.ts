@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+﻿import { expect, test } from "@playwright/test";
 import {
   activityFixture,
   demographicsFixture,
@@ -24,7 +24,7 @@ async function mockDashboardApis(page: Parameters<typeof test>[0]["page"]) {
 
     await route.fulfill({
       json: {
-        overview: requestedSince === "2026-02-01" ? previousOverviewFixture : overviewFixture,
+        overview: requestedSince === "2026-02-01" || requestedSince === "2026-03-01" ? previousOverviewFixture : overviewFixture,
       },
     });
   });
@@ -64,6 +64,8 @@ test("redirects to instagram and renders dashboard shell", async ({ page }) => {
   await expect(page.getByLabel("Selecionar conta")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Social Insights Dashboard", level: 1 })).toBeVisible();
   await expect(page.getByRole("button", { name: "Últimos 30 dias", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Este mês", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Mês anterior", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Instagram", exact: true })).toBeVisible();
 });
 
@@ -75,5 +77,21 @@ test("keeps activity visible for 90 days with a 30-day limitation notice", async
 
   await expect(page.getByLabel("Selecionar conta")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Melhor dia para postagens", level: 3 })).toBeVisible();
+  await expect(page.locator('input[type="date"]').first()).toHaveValue("2026-01-09");
+  await expect(page.locator('input[type="date"]').nth(1)).toHaveValue("2026-04-08");
   await expect(page.getByText("A Meta disponibiliza activity apenas dos últimos 30 dias.")).toHaveCount(2);
+});
+
+test("supports calendar month presets", async ({ page }) => {
+  await mockDashboardApis(page);
+
+  await page.goto("/instagram", { waitUntil: "domcontentloaded" });
+
+  await page.getByRole("button", { name: "Este mês", exact: true }).click();
+  await expect(page.locator('input[type="date"]').first()).toHaveValue("2026-04-01");
+  await expect(page.locator('input[type="date"]').nth(1)).toHaveValue("2026-04-08");
+
+  await page.getByRole("button", { name: "Mês anterior", exact: true }).click();
+  await expect(page.locator('input[type="date"]').first()).toHaveValue("2026-03-01");
+  await expect(page.locator('input[type="date"]').nth(1)).toHaveValue("2026-03-31");
 });

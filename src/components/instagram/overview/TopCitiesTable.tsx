@@ -1,5 +1,5 @@
 import type { CityBreakdown } from "@/lib/types/instagram.types";
-import { formatNumber } from "@/lib/utils/formatters";
+import { formatFullNumber } from "@/lib/utils/formatters";
 
 interface TopCitiesTableProps {
   cities: CityBreakdown[];
@@ -14,7 +14,7 @@ export function TopCitiesTable({ cities }: TopCitiesTableProps) {
           {cities.slice(0, 5).map((city) => (
             <div key={city.city} className="flex items-center justify-between rounded-2xl bg-white/80 px-4 py-3">
               <span>{city.city}</span>
-              <strong>{formatNumber(city.value)}</strong>
+              <strong>{formatFullNumber(city.value)}</strong>
             </div>
           ))}
         </div>

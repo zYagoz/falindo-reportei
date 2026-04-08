@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Bar,
@@ -12,7 +12,7 @@ import {
 import { useChartContainerReady } from "@/lib/hooks/useChartContainerReady";
 import type { ActivityBucket } from "@/lib/types/instagram.types";
 import { formatShortDate } from "@/lib/utils/dateUtils";
-import { formatNumber } from "@/lib/utils/formatters";
+import { formatFullNumber } from "@/lib/utils/formatters";
 
 interface ActivityBarCardProps {
   title: string;
@@ -41,7 +41,7 @@ function ActivityTooltip({
     <div className="rounded-2xl border border-[var(--color-border)] bg-white/95 px-4 py-3 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
       <p className="font-semibold text-[var(--color-text)]">{bucket.label}</p>
       <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-        Seguidores online médios: {formatNumber(Number(bucket.value.toFixed(2)))}
+        Seguidores online médios: {formatFullNumber(bucket.value)}
       </p>
       <p className="text-sm text-[var(--color-text-muted)]">Dias analisados: {bucket.sampleCount}</p>
     </div>
@@ -88,7 +88,7 @@ export function ActivityBarCard({
               >
                 <CartesianGrid stroke="rgba(249, 115, 22, 0.12)" strokeDasharray="4 4" vertical={false} />
                 <XAxis dataKey="label" tickLine={false} axisLine={false} />
-                <YAxis axisLine={false} tickFormatter={formatNumber} tickLine={false} width={56} />
+                <YAxis axisLine={false} tickFormatter={formatFullNumber} tickLine={false} width={72} />
                 <Tooltip content={<ActivityTooltip />} />
                 <Bar dataKey="value" radius={[8, 8, 0, 0]}>
                   {buckets.map((bucket) => (

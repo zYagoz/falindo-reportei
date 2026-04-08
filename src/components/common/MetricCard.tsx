@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { formatNumber, formatPercent } from "@/lib/utils/formatters";
+import { formatFullNumber, formatPercent } from "@/lib/utils/formatters";
 import { VariationBadge } from "./VariationBadge";
 
 interface MetricCardProps {
@@ -19,7 +19,7 @@ function formatValue(value: number | string, format: MetricCardProps["format"] =
     return formatPercent(value);
   }
 
-  return formatNumber(value);
+  return formatFullNumber(value);
 }
 
 export function MetricCard({ label, value, previousValue, format = "number", icon }: MetricCardProps) {
@@ -38,7 +38,7 @@ export function MetricCard({ label, value, previousValue, format = "number", ico
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <VariationBadge current={value} previous={previousValue} />
           <span className="text-xs text-[var(--color-text-muted)] sm:text-right">
-            Base anterior: {formatNumber(previousValue)}
+            Base anterior: {formatFullNumber(previousValue)}
           </span>
         </div>
       ) : null}

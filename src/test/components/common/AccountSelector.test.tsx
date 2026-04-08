@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+﻿import { fireEvent, render, screen } from "@testing-library/react";
 import { AccountSelector } from "@/components/common/AccountSelector";
 import { instagramAccountsFixture } from "@/test/mocks/fixtures/meta";
 
@@ -37,5 +37,36 @@ describe("AccountSelector", () => {
 
     expect(localStorage.getItem("selected_instagram_account")).toBe(instagramAccountsFixture[1].id);
     expect(onSelect).toHaveBeenLastCalledWith(instagramAccountsFixture[1]);
+  });
+
+  it("falls back to initials when the profile photo fails and resets on account change", () => {
+    const onSelect = vi.fn();
+    const { rerender } = render(
+      <AccountSelector
+        accounts={instagramAccountsFixture}
+        loading={false}
+        onSelect={onSelect}
+        platform="instagram"
+        selectedId={instagramAccountsFixture[0].id}
+      />,
+    );
+
+    const image = screen.getByRole("img", { name: instagramAccountsFixture[0].name });
+    fireEvent.error(image);
+
+    expect(screen.getByText("HA")).toBeInTheDocument();
+
+    rerender(
+      <AccountSelector
+        accounts={instagramAccountsFixture}
+        loading={false}
+        onSelect={onSelect}
+        platform="instagram"
+        selectedId={instagramAccountsFixture[1].id}
+      />,
+    );
+
+    expect(screen.queryByText("HA")).not.toBeInTheDocument();
+    expect(screen.getByText("NO")).toBeInTheDocument();
   });
 });

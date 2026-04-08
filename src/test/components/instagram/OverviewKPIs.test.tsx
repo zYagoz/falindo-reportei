@@ -13,8 +13,8 @@ describe("OverviewKPIs", () => {
     expect(screen.getByText("Cliques no link")).toBeInTheDocument();
     expect(screen.queryByText(/Base anterior: 3.9k/)).not.toBeInTheDocument();
     expect(screen.getByText("Base anterior: 84")).toBeInTheDocument();
-    expect(screen.getByText("Base anterior: 13.6k")).toBeInTheDocument();
-    expect(screen.getByText("Base anterior: 7.2k")).toBeInTheDocument();
+    expect(screen.getByText("Base anterior: 13.600")).toBeInTheDocument();
+    expect(screen.getByText("Base anterior: 7.200")).toBeInTheDocument();
     expect(screen.getByText("Base anterior: 42")).toBeInTheDocument();
   });
 });

@@ -1,24 +1,30 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
-import type { DateRange } from "@/lib/types/common.types";
+import type { DatePreset } from "@/lib/types/common.types";
 import {
   createCustomDateRange,
   DATE_PRESETS,
   DEFAULT_PRESET_INDEX,
-  getDateRange,
+  getDateRangeFromPreset,
   getPreviousDateRange,
+  getPreviousDateRangeForPreset,
 } from "@/lib/utils/dateUtils";
 
 export function useDateRange() {
   const [selectedPreset, setSelectedPreset] = useState(DEFAULT_PRESET_INDEX);
-  const [customRange, setCustomRange] = useState<DateRange | null>(null);
+  const [customRange, setCustomRange] = useState<ReturnType<typeof createCustomDateRange> | null>(null);
+
+  const selectedPresetConfig: DatePreset = DATE_PRESETS[selectedPreset];
 
   const activeRange = useMemo(
-    () => customRange ?? getDateRange(DATE_PRESETS[selectedPreset].days),
-    [customRange, selectedPreset],
+    () => customRange ?? getDateRangeFromPreset(selectedPresetConfig),
+    [customRange, selectedPresetConfig],
   );
-  const previousRange = useMemo(() => getPreviousDateRange(activeRange), [activeRange]);
+  const previousRange = useMemo(
+    () => (customRange ? getPreviousDateRange(activeRange) : getPreviousDateRangeForPreset(selectedPresetConfig)),
+    [activeRange, customRange, selectedPresetConfig],
+  );
 
   function selectPreset(index: number) {
     setSelectedPreset(index);

@@ -1,9 +1,11 @@
-import type { DateRange } from "@/lib/types/common.types";
+﻿import type { DatePreset, DateRange } from "@/lib/types/common.types";
 
-export const DATE_PRESETS = [
-  { label: "Últimos 7 dias", days: 7 },
-  { label: "Últimos 30 dias", days: 30 },
-  { label: "Últimos 90 dias", days: 90 },
+export const DATE_PRESETS: readonly DatePreset[] = [
+  { label: "Últimos 7 dias", kind: "days", days: 7 },
+  { label: "Últimos 30 dias", kind: "days", days: 30 },
+  { label: "Últimos 90 dias", kind: "days", days: 90 },
+  { label: "Este mês", kind: "calendar", calendarRange: "current_month" },
+  { label: "Mês anterior", kind: "calendar", calendarRange: "previous_month" },
 ] as const;
 
 export const DEFAULT_PRESET_INDEX = 1;
@@ -26,6 +28,40 @@ export function getDateRange(days: number, referenceDate = new Date()): DateRang
     until: toDateString(until),
     label: `Últimos ${days} dias`,
   };
+}
+
+function getCurrentMonthRange(referenceDate = new Date()): DateRange {
+  const until = new Date(referenceDate);
+  const since = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+
+  return {
+    since: toDateString(since),
+    until: toDateString(until),
+    label: "Este mês",
+  };
+}
+
+function getPreviousMonthRange(referenceDate = new Date()): DateRange {
+  const since = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - 1, 1);
+  const until = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 0);
+
+  return {
+    since: toDateString(since),
+    until: toDateString(until),
+    label: "Mês anterior",
+  };
+}
+
+export function getDateRangeFromPreset(preset: DatePreset, referenceDate = new Date()): DateRange {
+  if (preset.kind === "days") {
+    return getDateRange(preset.days ?? 30, referenceDate);
+  }
+
+  if (preset.calendarRange === "current_month") {
+    return getCurrentMonthRange(referenceDate);
+  }
+
+  return getPreviousMonthRange(referenceDate);
 }
 
 export function createCustomDateRange(since: string, until: string): DateRange {
@@ -68,6 +104,19 @@ export function getPreviousDateRange(range: DateRange): DateRange {
   };
 }
 
+export function getPreviousDateRangeForPreset(preset: DatePreset, referenceDate = new Date()): DateRange {
+  if (preset.kind === "calendar") {
+    if (preset.calendarRange === "current_month") {
+      return getPreviousMonthRange(referenceDate);
+    }
+
+    const previousMonthReference = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - 1, 1);
+    return getPreviousMonthRange(previousMonthReference);
+  }
+
+  return getPreviousDateRange(getDateRangeFromPreset(preset, referenceDate));
+}
+
 export function getDefaultDateRange(referenceDate = new Date()): DateRange {
-  return getDateRange(DATE_PRESETS[DEFAULT_PRESET_INDEX].days, referenceDate);
+  return getDateRangeFromPreset(DATE_PRESETS[DEFAULT_PRESET_INDEX], referenceDate);
 }
