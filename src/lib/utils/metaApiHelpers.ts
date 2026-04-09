@@ -9,6 +9,7 @@ import type {
   InstagramInsights,
   InstagramOverviewAggregate,
   InstagramReelsAggregate,
+  InstagramStoriesAggregate,
   MetricDataPoint,
   OnlineFollowersPoint,
   PostInsights,
@@ -149,8 +150,8 @@ export function parseMetricTotalValue(response: unknown, metricName: string): nu
     return 0;
   }
 
-  if (typeof metric.total_value?.value === "number") {
-    return metric.total_value.value;
+  if (metric.total_value?.value !== undefined) {
+    return sumMetricObject(metric.total_value.value);
   }
 
   if (metric.values?.length) {
@@ -440,6 +441,56 @@ export function parseOverviewAggregate(
     profile_views: parseMetricAggregateTotal(profileViewsResponse, "profile_views"),
     profile_reach: parseMetricAggregateTotal(reachResponse, "reach"),
     profile_links_taps: parseMetricTotalValue(linkTapsResponse, "profile_links_taps"),
+  };
+}
+
+export function parseStoriesAggregate(
+  storiesCount: number,
+  response: unknown,
+): InstagramStoriesAggregate {
+  const navigationMetric = getMetric(response, "navigation");
+  const directNavigationValue =
+    navigationMetric?.total_value?.value ??
+    (navigationMetric?.values?.length ? navigationMetric.values[navigationMetric.values.length - 1]?.value : undefined);
+  const directNavigationObject =
+    directNavigationValue && typeof directNavigationValue === "object"
+      ? (directNavigationValue as Record<string, number>)
+      : {};
+  const navigationBreakdownTotals = getBreakdownResults(navigationMetric ?? {}).reduce<Record<string, number>>(
+    (accumulator, result) => {
+      const key = result.dimension_values?.[0];
+
+      if (!key) {
+        return accumulator;
+      }
+
+      accumulator[key] = (accumulator[key] ?? 0) + sumMetricObject(result.value);
+      return accumulator;
+    },
+    {},
+  );
+
+  const readNavigationValue = (...keys: string[]) =>
+    keys.reduce((value, key) => {
+      if (value > 0) {
+        return value;
+      }
+
+      return Math.max(
+        toNumber(directNavigationObject[key]),
+        toNumber(navigationBreakdownTotals[key]),
+      );
+    }, 0);
+
+  return {
+    stories_count: storiesCount,
+    reach: parseMetricTotalValue(response, "reach"),
+    views: parseMetricTotalValue(response, "views"),
+    replies: parseMetricTotalValue(response, "replies"),
+    taps_forward: readNavigationValue("TAP_FORWARD", "taps_forward"),
+    taps_back: readNavigationValue("TAP_BACK", "taps_back"),
+    exits: readNavigationValue("TAP_EXIT", "exits"),
+    swipe_forward: readNavigationValue("SWIPE_FORWARD", "swipe_forward"),
   };
 }
 

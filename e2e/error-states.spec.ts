@@ -7,6 +7,7 @@ import {
   reelsSummaryFixture,
   postsFixture,
   reelsFixture,
+  storiesFixture,
 } from "../src/test/mocks/fixtures/meta";
 
 test("shows section error without dropping the rest of the page", async ({ page }) => {
@@ -27,6 +28,9 @@ test("shows section error without dropping the rest of the page", async ({ page 
   });
   await page.route("**/api/instagram/posts**", async (route) => {
     await route.fulfill({ json: { posts: postsFixture } });
+  });
+  await page.route("**/api/instagram/stories**", async (route) => {
+    await route.fulfill({ json: { stories: storiesFixture } });
   });
   await page.route("**/api/instagram/reels**", async (route) => {
     await route.fulfill({ json: { reels: reelsFixture } });

@@ -8,9 +8,12 @@ import {
   overviewFixture,
   postsFixture,
   reelsFixture,
+  storiesFixture,
 } from "../src/test/mocks/fixtures/meta";
 
 test("persists selected account in localStorage", async ({ page }) => {
+  const accountSelect = page.locator('select[aria-label="Selecionar conta"]');
+
   await page.route("**/api/instagram/accounts", async (route) => {
     await route.fulfill({ json: { accounts: instagramAccountsFixture } });
   });
@@ -29,6 +32,9 @@ test("persists selected account in localStorage", async ({ page }) => {
   await page.route("**/api/instagram/posts**", async (route) => {
     await route.fulfill({ json: { posts: postsFixture } });
   });
+  await page.route("**/api/instagram/stories**", async (route) => {
+    await route.fulfill({ json: { stories: storiesFixture } });
+  });
   await page.route("**/api/instagram/reels**", async (route) => {
     await route.fulfill({ json: { reels: reelsFixture } });
   });
@@ -37,10 +43,11 @@ test("persists selected account in localStorage", async ({ page }) => {
   });
 
   await page.goto("/instagram", { waitUntil: "domcontentloaded" });
-  await expect(page.getByLabel("Selecionar conta")).toBeVisible();
-  await page.getByLabel("Selecionar conta").selectOption("ig-2");
-  await expect(page.getByLabel("Selecionar conta")).toHaveValue("ig-2");
+  await expect(accountSelect).toBeVisible();
+  await accountSelect.selectOption("ig-2");
+  await expect(accountSelect).toHaveValue("ig-2");
 
   await page.reload();
-  await expect(page.getByLabel("Selecionar conta")).toHaveValue("ig-2");
+  await expect(accountSelect).toBeVisible();
+  await expect(accountSelect).toHaveValue("ig-2");
 });

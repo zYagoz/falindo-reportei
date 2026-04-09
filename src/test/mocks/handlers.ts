@@ -8,6 +8,7 @@ import {
   postsFixture,
   reelsSummaryFixture,
   reelsFixture,
+  storiesFixture,
 } from "./fixtures/meta";
 
 export const handlers = [
@@ -17,6 +18,7 @@ export const handlers = [
   http.get("/api/instagram/activity", () => HttpResponse.json({ activity: activityFixture })),
   http.get("/api/instagram/demographics", () => HttpResponse.json({ demographics: demographicsFixture })),
   http.get("/api/instagram/posts", () => HttpResponse.json({ posts: postsFixture })),
+  http.get("/api/instagram/stories", () => HttpResponse.json({ stories: storiesFixture })),
   http.get("/api/instagram/reels-summary", () => HttpResponse.json({ summary: reelsSummaryFixture })),
   http.get("/api/instagram/reels", () => HttpResponse.json({ reels: reelsFixture })),
 ];

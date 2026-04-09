@@ -20,6 +20,11 @@ import {
   metaReelsReachBreakdownResponse,
   metaReelsViewsBreakdownResponse,
   metaReelInsightsResponse,
+  metaStoriesEdgeResponse,
+  metaStoryNavigationBreakdownResponse,
+  metaStoryNavigationResponse,
+  metaStoryInsightsResponse,
+  metaStoryNotEnoughViewersErrorPayload,
   metaTotalInsightsResponse,
 } from "@/test/mocks/fixtures/meta";
 import {
@@ -33,6 +38,7 @@ import {
   fetchReelsAggregate,
   fetchReelInsights,
   fetchReels,
+  fetchStories,
 } from "@/lib/api/meta/instagram";
 
 const metaFetchMock = vi.fn();
@@ -358,6 +364,110 @@ describe("instagram api layer", () => {
       total_interactions: 500,
       engagement_rate: 14.52,
     });
+  });
+
+  it("builds aggregated story summary from active or recent stories", async () => {
+    metaFetchMock.mockImplementation((endpoint: string, options?: { params?: Record<string, string> }) => {
+      if (endpoint === "ig-1/stories") {
+        return Promise.resolve(metaStoriesEdgeResponse);
+      }
+
+      if (options?.params?.metric === "reach,replies,views") {
+        return Promise.resolve(metaStoryInsightsResponse);
+      }
+
+      expect(options?.params).toMatchObject({
+        metric: "navigation",
+        breakdown: "story_navigation_action_type",
+      });
+      return Promise.resolve(metaStoryNavigationResponse);
+    });
+
+    const stories = await fetchStories("ig-1");
+
+    expect(stories).toEqual({
+      stories_count: 2,
+      reach: 1240,
+      views: 3580,
+      replies: 18,
+      taps_forward: 520,
+      taps_back: 97,
+      exits: 46,
+      swipe_forward: 10,
+    });
+  });
+
+  it("parses story navigation from breakdown results", async () => {
+    metaFetchMock.mockImplementation((endpoint: string, options?: { params?: Record<string, string> }) => {
+      if (endpoint === "ig-1/stories") {
+        return Promise.resolve(metaStoriesEdgeResponse);
+      }
+
+      if (options?.params?.metric === "reach,replies,views") {
+        return Promise.resolve(metaStoryInsightsResponse);
+      }
+
+      return Promise.resolve(metaStoryNavigationBreakdownResponse);
+    });
+
+    const stories = await fetchStories("ig-1");
+
+    expect(stories.taps_forward).toBe(520);
+    expect(stories.taps_back).toBe(97);
+    expect(stories.exits).toBe(46);
+    expect(stories.swipe_forward).toBe(10);
+  });
+
+  it("returns an empty story state when there are no active stories", async () => {
+    metaFetchMock.mockResolvedValue({ data: [] });
+
+    const stories = await fetchStories("ig-1");
+
+    expect(stories.stories_count).toBe(0);
+    expect(stories.emptyReason).toContain("Nenhum story ativo");
+  });
+
+  it("ignores unsupported story metrics without failing the whole summary", async () => {
+    metaFetchMock.mockImplementation((endpoint: string, options?: { params?: Record<string, string> }) => {
+      if (endpoint === "ig-1/stories") {
+        return Promise.resolve(metaStoriesEdgeResponse);
+      }
+
+      if (options?.params?.metric === "reach,replies,views") {
+        return Promise.resolve(metaStoryInsightsResponse);
+      }
+
+      expect(options?.params?.metric).toBe("navigation");
+      return Promise.reject(new Error("(#100) metric[3] must be one of the following values: impressions, reach, replies, saved, video_views, likes, comments, shares, plays, total_interactions, follows, profile_visits, profile_activity, navigation"));
+    });
+
+    const stories = await fetchStories("ig-1");
+
+    expect(stories.views).toBe(3580);
+    expect(stories.reach).toBe(1240);
+    expect(stories.taps_forward).toBe(0);
+    expect(stories.taps_back).toBe(0);
+    expect(stories.exits).toBe(0);
+    expect(stories.swipe_forward).toBe(0);
+  });
+
+  it("treats not enough story viewers as an empty aggregate instead of failing", async () => {
+    metaFetchMock.mockImplementation((endpoint: string, options?: { params?: Record<string, string> }) => {
+      if (endpoint === "ig-1/stories") {
+        return Promise.resolve(metaStoriesEdgeResponse);
+      }
+
+      if (options?.params?.metric === "reach,replies,views") {
+        return Promise.reject(new Error(metaStoryNotEnoughViewersErrorPayload.error.message));
+      }
+
+      return Promise.resolve(metaStoryNavigationResponse);
+    });
+
+    const stories = await fetchStories("ig-1");
+
+    expect(stories.stories_count).toBe(0);
+    expect(stories.emptyReason).toContain("insights utilizaveis");
   });
 
   it("splits long ranges for aggregated reel insights", async () => {

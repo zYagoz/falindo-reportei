@@ -8,6 +8,7 @@ import type {
   InstagramPost,
   InstagramReel,
   InstagramReelsAggregate,
+  InstagramStoriesAggregate,
 } from "@/lib/types/instagram.types";
 
 export const instagramAccountsFixture: InstagramAccount[] = [
@@ -145,6 +146,17 @@ export const previousReelsSummaryFixture: InstagramReelsAggregate = {
   reach: 1503,
   total_interactions: 80,
   engagement_rate: 5.32,
+};
+
+export const storiesFixture: InstagramStoriesAggregate = {
+  stories_count: 3,
+  reach: 1240,
+  views: 3580,
+  replies: 18,
+  taps_forward: 520,
+  taps_back: 97,
+  exits: 46,
+  swipe_forward: 10,
 };
 
 function createActivityBucket(
@@ -411,6 +423,94 @@ export const metaMediaResponse = {
       media_type: "VIDEO",
       thumbnail_url: "https://images.example.com/reel-1.jpg",
       timestamp: "2026-03-30T09:00:00.000Z",
+    },
+  ],
+};
+
+export const metaStoriesEdgeResponse = {
+  data: [
+    {
+      id: "story-1",
+      caption: "Story 1",
+      media_type: "STORY",
+      media_product_type: "STORY",
+      timestamp: "2026-04-08T10:00:00.000Z",
+    },
+    {
+      id: "story-2",
+      caption: "Story 2",
+      media_type: "STORY",
+      media_product_type: "STORY",
+      timestamp: "2026-04-08T12:00:00.000Z",
+    },
+  ],
+};
+
+export const metaStoryInsightsResponse = {
+  data: [
+    { name: "reach", total_value: { value: 620 } },
+    { name: "views", total_value: { value: 1790 } },
+    { name: "replies", total_value: { value: 9 } },
+  ],
+};
+
+export const metaStoryNavigationResponse = {
+  data: [
+    {
+      name: "navigation",
+      total_value: {
+        value: {
+          TAP_FORWARD: 260,
+          TAP_BACK: 48.5,
+          TAP_EXIT: 23,
+          SWIPE_FORWARD: 5,
+        },
+      },
+    },
+  ],
+};
+
+export const metaStoryNavigationBreakdownResponse = {
+  data: [
+    {
+      name: "navigation",
+      total_value: {
+        breakdowns: [
+          {
+            dimension_keys: ["story_navigation_action_type"],
+            results: [
+              { dimension_values: ["TAP_FORWARD"], value: 260 },
+              { dimension_values: ["TAP_BACK"], value: 48.5 },
+              { dimension_values: ["TAP_EXIT"], value: 23 },
+              { dimension_values: ["SWIPE_FORWARD"], value: 5 },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+};
+
+export const metaStoryNotEnoughViewersErrorPayload = {
+  error: {
+    message: "(#10) Not enough viewers for this media to show insights",
+  },
+};
+
+export const metaStoryNavigationValuesResponse = {
+  data: [
+    {
+      name: "navigation",
+      values: [
+        {
+          value: {
+            TAP_FORWARD: 260,
+            TAP_BACK: 48.5,
+            TAP_EXIT: 23,
+            SWIPE_FORWARD: 5,
+          },
+        },
+      ],
     },
   ],
 };

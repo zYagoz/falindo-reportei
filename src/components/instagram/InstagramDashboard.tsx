@@ -17,7 +17,7 @@ import { FollowerGrowthChart } from "@/components/instagram/overview/FollowerGro
 import { GenderDonutLegendChart } from "@/components/instagram/overview/GenderDonutLegendChart";
 import { OverviewKPIs } from "@/components/instagram/overview/OverviewKPIs";
 import { TopCitiesTable } from "@/components/instagram/overview/TopCitiesTable";
-import { StoriesSummary } from "@/components/instagram/stories/StoriesSummary";
+import { StoriesSummaryCard } from "@/components/instagram/stories/StoriesSummaryCard";
 import { useInstagramActivity } from "@/lib/hooks/useInstagramActivity";
 import { useDateRange } from "@/lib/hooks/useDateRange";
 import { useInstagramAccounts } from "@/lib/hooks/useInstagramAccounts";
@@ -27,6 +27,7 @@ import { useInstagramInsights } from "@/lib/hooks/useInstagramInsights";
 import { useInstagramPosts } from "@/lib/hooks/useInstagramPosts";
 import { useInstagramReels } from "@/lib/hooks/useInstagramReels";
 import { useInstagramReelsSummary } from "@/lib/hooks/useInstagramReelsSummary";
+import { useInstagramStories } from "@/lib/hooks/useInstagramStories";
 import type { InstagramAccount } from "@/lib/types/instagram.types";
 
 export function InstagramDashboard() {
@@ -79,6 +80,9 @@ export function InstagramDashboard() {
     loading: previousReelsSummaryLoading,
     error: previousReelsSummaryError,
   } = useInstagramReelsSummary(selectedAccount?.id ?? null, previousRange);
+  const { stories, loading: storiesLoading, error: storiesError } = useInstagramStories(
+    selectedAccount?.id ?? null,
+  );
 
   return (
     <div className="min-w-0 space-y-8 overflow-x-clip">
@@ -204,9 +208,20 @@ export function InstagramDashboard() {
         )}
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-3">
-        <StoriesSummary />
+      <section className="space-y-4">
         {!selectedAccount ? (
+          <StoriesSummaryCard emptyMessage="Selecione uma conta para carregar stories recentes." />
+        ) : storiesLoading ? (
+          <LoadingSkeleton lines={6} />
+        ) : storiesError ? (
+          <div>
+            <ErrorMessage message={storiesError} />
+          </div>
+        ) : (
+          <StoriesSummaryCard stories={stories} />
+        )}
+        <div className="mx-auto grid max-w-[1180px] gap-4 xl:grid-cols-2">
+          {!selectedAccount ? (
           <>
             <div className="card-surface rounded-[28px] p-5">
               <h3 className="mb-2 text-lg font-semibold">Melhor dia para postagens</h3>
@@ -234,10 +249,21 @@ export function InstagramDashboard() {
           </>
         ) : (
           <>
-            <StoriesSummary />
-            <StoriesSummary />
+            <div className="card-surface rounded-[28px] p-5">
+              <h3 className="mb-2 text-lg font-semibold">Melhor dia para postagens</h3>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                A Meta nao disponibilizou activity utilizavel para esta conta no periodo selecionado.
+              </p>
+            </div>
+            <div className="card-surface rounded-[28px] p-5">
+              <h3 className="mb-2 text-lg font-semibold">Melhor horario para postagens</h3>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                A Meta nao disponibilizou activity utilizavel para esta conta no periodo selecionado.
+              </p>
+            </div>
           </>
-        )}
+          )}
+        </div>
       </section>
     </div>
   );

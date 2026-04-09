@@ -84,6 +84,18 @@ export interface InstagramReelsAggregate {
   engagement_rate: number;
 }
 
+export interface InstagramStoriesAggregate {
+  stories_count: number;
+  reach: number;
+  views: number;
+  replies: number;
+  taps_forward: number;
+  taps_back: number;
+  exits: number;
+  swipe_forward: number;
+  emptyReason?: string;
+}
+
 export interface GenderBreakdown {
   M: number;
   F: number;

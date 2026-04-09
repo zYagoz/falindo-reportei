@@ -18,7 +18,7 @@ describe("ReelsSummary", () => {
     );
 
     expect(screen.getByText("Visualizações")).toBeInTheDocument();
-    expect(screen.getByText("17.3k")).toBeInTheDocument();
-    expect(screen.getByText("Base anterior: 7.3k")).toBeInTheDocument();
+    expect(screen.getByText("17.295")).toBeInTheDocument();
+    expect(screen.getByText("Base anterior: 7.299")).toBeInTheDocument();
   });
 });

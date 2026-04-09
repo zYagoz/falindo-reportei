@@ -7,6 +7,7 @@ import type {
   InstagramPost,
   InstagramReel,
   InstagramReelsAggregate,
+  InstagramStoriesAggregate,
   PostInsights,
   ReelInsights,
 } from "@/lib/types/instagram.types";
@@ -22,6 +23,7 @@ import {
   parseMetricTotalValue,
   parsePostInsights,
   parseReelInsights,
+  parseStoriesAggregate,
 } from "@/lib/utils/metaApiHelpers";
 import { metaFetch, metaFetchAbsolute } from "./client";
 
@@ -40,7 +42,8 @@ type FacebookPage = {
 type MetaMedia = {
   id: string;
   caption?: string;
-  media_type: "IMAGE" | "CAROUSEL_ALBUM" | "VIDEO";
+  media_type: "IMAGE" | "CAROUSEL_ALBUM" | "VIDEO" | "STORY";
+  media_product_type?: string;
   media_url?: string;
   thumbnail_url?: string;
   timestamp: string;
@@ -70,6 +73,7 @@ type OnlineFollowersResponse = {
 
 const MAX_INSIGHTS_WINDOW_DAYS = 30;
 const ONLINE_FOLLOWERS_PAGE_LIMIT = 20;
+const STORY_METRICS = ["reach", "replies", "views"] as const;
 
 function toUtcDate(value: string): Date {
   return new Date(`${value}T00:00:00.000Z`);
@@ -104,6 +108,127 @@ function buildDateWindows(since: string, until: string): DateWindow[] {
   }
 
   return windows;
+}
+
+function isStoryMedia(media: MetaMedia): boolean {
+  return media.media_product_type === "STORY" || media.media_type === "STORY";
+}
+
+function isFeedMedia(
+  media: MetaMedia,
+): media is MetaMedia & { media_type: "IMAGE" | "CAROUSEL_ALBUM" } {
+  return media.media_type === "IMAGE" || media.media_type === "CAROUSEL_ALBUM";
+}
+
+function isReelMedia(media: MetaMedia): media is MetaMedia & { media_type: "VIDEO" } {
+  return media.media_type === "VIDEO" && !isStoryMedia(media);
+}
+
+function createEmptyStoriesAggregate(emptyReason: string): InstagramStoriesAggregate {
+  return {
+    stories_count: 0,
+    reach: 0,
+    views: 0,
+    replies: 0,
+    taps_forward: 0,
+    taps_back: 0,
+    exits: 0,
+    swipe_forward: 0,
+    emptyReason,
+  };
+}
+
+function isUnsupportedStoryMetricError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("not supported") ||
+    message.includes("unsupported") ||
+    message.includes("invalid metric") ||
+    message.includes("cannot be queried") ||
+    message.includes("must be one of")
+  );
+}
+
+function isNotEnoughStoryViewersError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("Not enough viewers");
+}
+
+async function fetchStoryInsights(storyId: string): Promise<InstagramStoriesAggregate> {
+  try {
+    const [baseResponse, navigationResponse] = await Promise.all([
+      metaFetch(`${storyId}/insights`, {
+        params: {
+          metric: STORY_METRICS.join(","),
+        },
+        revalidate: 1800,
+      }),
+      fetchStoryNavigation(storyId),
+    ]);
+
+    const mergedResponse = {
+      data: [
+        ...(typeof baseResponse === "object" && baseResponse && "data" in baseResponse
+          ? ((baseResponse as { data?: unknown[] }).data ?? [])
+          : []),
+        ...(navigationResponse?.data ?? []),
+      ],
+    };
+
+    return parseStoriesAggregate(1, mergedResponse);
+  } catch (error) {
+    if (isUnsupportedStoryMetricError(error) || isNotEnoughStoryViewersError(error)) {
+      return createEmptyStoriesAggregate("A Meta nao disponibilizou insights utilizaveis para este story.");
+    }
+
+    throw error;
+  }
+}
+
+async function fetchStoryNavigation(storyId: string): Promise<{ data?: unknown[] } | null> {
+  try {
+    return await metaFetch(`${storyId}/insights`, {
+      params: {
+        metric: "navigation",
+        breakdown: "story_navigation_action_type",
+      },
+      revalidate: 1800,
+    });
+  } catch (error) {
+    if (isUnsupportedStoryMetricError(error) || isNotEnoughStoryViewersError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+function mergeStoriesAggregates(stories: InstagramStoriesAggregate[]): InstagramStoriesAggregate {
+  return stories.reduce<InstagramStoriesAggregate>(
+    (accumulator, current) => ({
+      stories_count: accumulator.stories_count + current.stories_count,
+      reach: accumulator.reach + current.reach,
+      views: accumulator.views + current.views,
+      replies: accumulator.replies + current.replies,
+      taps_forward: accumulator.taps_forward + current.taps_forward,
+      taps_back: accumulator.taps_back + current.taps_back,
+      exits: accumulator.exits + current.exits,
+      swipe_forward: accumulator.swipe_forward + current.swipe_forward,
+    }),
+    {
+      stories_count: 0,
+      reach: 0,
+      views: 0,
+      replies: 0,
+      taps_forward: 0,
+      taps_back: 0,
+      exits: 0,
+      swipe_forward: 0,
+    },
+  );
 }
 
 function countDistinctActivityDates(
@@ -505,7 +630,7 @@ export async function fetchFeedPosts(
 ): Promise<InstagramPost[]> {
   const postsResponse = await metaFetch<{ data: MetaMedia[] }>(`${accountId}/media`, {
     params: {
-      fields: "id,caption,media_type,thumbnail_url,media_url,timestamp",
+      fields: "id,caption,media_type,media_product_type,thumbnail_url,media_url,timestamp",
       since,
       until,
       limit: "50",
@@ -515,7 +640,7 @@ export async function fetchFeedPosts(
 
   return Promise.all(
     postsResponse.data
-      .filter((post) => post.media_type !== "VIDEO")
+      .filter(isFeedMedia)
       .map(async (post) => {
         const insights = await fetchPostInsights(post.id);
         return {
@@ -549,7 +674,7 @@ export async function fetchReels(
 ): Promise<InstagramReel[]> {
   const reelsResponse = await metaFetch<{ data: MetaMedia[] }>(`${accountId}/media`, {
     params: {
-      fields: "id,caption,thumbnail_url,timestamp,media_type",
+      fields: "id,caption,thumbnail_url,timestamp,media_type,media_product_type",
       since,
       until,
       limit: "50",
@@ -559,7 +684,7 @@ export async function fetchReels(
 
   return Promise.all(
     reelsResponse.data
-      .filter((media) => media.media_type === "VIDEO")
+      .filter(isReelMedia)
       .map(async (reel) => ({
         id: reel.id,
         caption: reel.caption,
@@ -568,6 +693,41 @@ export async function fetchReels(
         insights: await fetchReelInsights(reel.id),
       })),
   );
+}
+
+export async function fetchStories(accountId: string): Promise<InstagramStoriesAggregate> {
+  const storiesResponse = await metaFetch<{ data: MetaMedia[] }>(`${accountId}/stories`, {
+    params: {
+      fields: "id,caption,media_type,media_product_type,timestamp",
+      limit: "25",
+    },
+    revalidate: 900,
+  });
+
+  const stories = storiesResponse.data.filter(isStoryMedia);
+
+  if (!stories.length) {
+    return createEmptyStoriesAggregate("Nenhum story ativo ou recente encontrado.");
+  }
+
+  const summary = mergeStoriesAggregates(await Promise.all(stories.map((story) => fetchStoryInsights(story.id))));
+
+  if (
+    !summary.reach &&
+    !summary.views &&
+    !summary.replies &&
+    !summary.taps_forward &&
+    !summary.taps_back &&
+    !summary.exits &&
+    !summary.swipe_forward
+  ) {
+    return {
+      ...summary,
+      emptyReason: "A Meta nao disponibilizou insights utilizaveis para os stories recentes desta conta.",
+    };
+  }
+
+  return summary;
 }
 
 export async function fetchReelsAggregate(
