@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { PlatformNav } from "@/components/common/PlatformNav";
 
 vi.setConfig({ testTimeout: 15000 });
@@ -24,8 +24,19 @@ describe("PlatformNav", () => {
     render(<PlatformNav />);
 
     expect(screen.getByRole("link", { name: /Instagram/i })).toHaveAttribute("href", "/instagram");
+    expect(screen.getByAltText("Instagram logo")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Facebook/i })).toHaveAttribute("href", "/facebook");
     expect(screen.getByRole("link", { name: /LinkedIn/i })).toHaveAttribute("href", "/linkedin");
     expect(screen.getAllByText("Em breve")).toHaveLength(2);
+  });
+
+  it("falls back to the icon when the custom instagram image fails", () => {
+    usePathnameMock.mockReturnValue("/instagram");
+
+    const { container } = render(<PlatformNav />);
+    fireEvent.error(screen.getByAltText("Instagram logo"));
+
+    expect(screen.queryByAltText("Instagram logo")).not.toBeInTheDocument();
+    expect(container.querySelector("svg")).not.toBeNull();
   });
 });

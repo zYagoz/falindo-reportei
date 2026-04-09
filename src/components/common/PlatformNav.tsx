@@ -2,13 +2,50 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { BadgeInfo, BarChart3, Building2, Camera } from "lucide-react";
 
 const items = [
-  { href: "/instagram", label: "Instagram", icon: Camera, enabled: true },
+  {
+    href: "/instagram",
+    label: "Instagram",
+    icon: Camera,
+    enabled: true,
+    imageSrc: "/instagram-logo.png",
+  },
   { href: "/facebook", label: "Facebook", icon: BadgeInfo, enabled: false },
   { href: "/linkedin", label: "LinkedIn", icon: Building2, enabled: false },
 ];
+
+function PlatformIcon({
+  icon: Icon,
+  label,
+  imageSrc,
+}: {
+  icon: typeof Camera;
+  label: string;
+  imageSrc?: string;
+}) {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageSrc]);
+
+  if (imageSrc && !imageFailed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        alt={`${label} logo`}
+        className="h-7 w-7 shrink-0 object-contain"
+        onError={() => setImageFailed(true)}
+        src={imageSrc}
+      />
+    );
+  }
+
+  return <Icon size={18} />;
+}
 
 export function PlatformNav() {
   const pathname = usePathname();
@@ -28,7 +65,6 @@ export function PlatformNav() {
       </div>
       <nav className="space-y-3">
         {items.map((item) => {
-          const Icon = item.icon;
           const active = pathname.startsWith(item.href);
 
           return (
@@ -42,7 +78,7 @@ export function PlatformNav() {
               href={item.href}
             >
               <span className="flex items-center gap-3">
-                <Icon size={18} />
+                <PlatformIcon icon={item.icon} imageSrc={item.imageSrc} label={item.label} />
                 <span className="font-medium">{item.label}</span>
               </span>
               {!item.enabled ? (
