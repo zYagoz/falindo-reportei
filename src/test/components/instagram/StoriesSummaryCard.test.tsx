@@ -10,11 +10,11 @@ describe("StoriesSummaryCard", () => {
     expect(screen.getByText("Stories ativas")).toBeInTheDocument();
     expect(screen.getByText("3.580")).toBeInTheDocument();
     expect(screen.getByText("Views")).toBeInTheDocument();
-    expect(screen.getByText("Toques para avancar")).toBeInTheDocument();
-    expect(screen.getByText("Pulos para o proximo story")).toBeInTheDocument();
+    expect(screen.getByText("Toques para avançar")).toBeInTheDocument();
+    expect(screen.getByText("Pulos para o próximo story")).toBeInTheDocument();
     expect(screen.queryByText("Atividade de perfil")).not.toBeInTheDocument();
     expect(screen.queryByText("Compartilhamentos")).not.toBeInTheDocument();
-    expect(screen.queryByText("Impressoes")).not.toBeInTheDocument();
+    expect(screen.queryByText("Impressões")).not.toBeInTheDocument();
   });
 
   it("renders an empty state", () => {

@@ -45,10 +45,10 @@ export function StoriesSummaryCard({ stories, emptyMessage }: StoriesSummaryCard
       <div className="mb-4 space-y-2">
         <h3 className="text-lg font-semibold">Stories</h3>
         <p className="text-sm text-[var(--color-text-muted)]">
-          Resumo de stories ativos ou recentemente disponiveis na Meta API.
+          Resumo de stories ativos ou recentemente disponíveis na Meta API.
         </p>
         <p className="text-xs text-[var(--color-text-muted)]">
-          Os insights de stories expiram rapido e normalmente so ficam disponiveis por cerca de 24 horas.
+          Os insights de stories expiram rápido e normalmente só ficam disponíveis por cerca de 24 horas.
         </p>
       </div>
 
@@ -58,12 +58,12 @@ export function StoriesSummaryCard({ stories, emptyMessage }: StoriesSummaryCard
           <StoryMetricCard icon={<ScanSearch size={20} />} label="Alcance" value={stories.reach} />
           <StoryMetricCard icon={<ScanSearch size={20} />} label="Views" value={stories.views} />
           <StoryMetricCard icon={<MessageSquareText size={20} />} label="Respostas" value={stories.replies} />
-          <StoryMetricCard icon={<SkipForward size={20} />} label="Toques para avancar" value={stories.taps_forward} />
+          <StoryMetricCard icon={<SkipForward size={20} />} label="Toques para avançar" value={stories.taps_forward} />
           <StoryMetricCard icon={<SkipBack size={20} />} label="Toques para voltar" value={stories.taps_back} />
-          <StoryMetricCard icon={<XCircle size={20} />} label="Saidas" value={stories.exits} />
+          <StoryMetricCard icon={<XCircle size={20} />} label="Saídas" value={stories.exits} />
           <StoryMetricCard
             icon={<ArrowRightCircle size={20} />}
-            label="Pulos para o proximo story"
+            label="Pulos para o próximo story"
             value={stories.swipe_forward}
           />
         </div>

@@ -181,7 +181,7 @@ async function fetchStoryInsights(storyId: string): Promise<InstagramStoriesAggr
     return parseStoriesAggregate(1, mergedResponse);
   } catch (error) {
     if (isUnsupportedStoryMetricError(error) || isNotEnoughStoryViewersError(error)) {
-      return createEmptyStoriesAggregate("A Meta nao disponibilizou insights utilizaveis para este story.");
+      return createEmptyStoriesAggregate("A Meta não disponibilizou insights utilizáveis para este story.");
     }
 
     throw error;
@@ -723,7 +723,7 @@ export async function fetchStories(accountId: string): Promise<InstagramStoriesA
   ) {
     return {
       ...summary,
-      emptyReason: "A Meta nao disponibilizou insights utilizaveis para os stories recentes desta conta.",
+      emptyReason: "A Meta não disponibilizou insights utilizáveis para os stories recentes desta conta.",
     };
   }
 

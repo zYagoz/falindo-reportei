@@ -94,7 +94,7 @@ export function InstagramDashboard() {
             </p>
             <h1 className="mt-2 text-4xl font-semibold tracking-tight">Social Insights Dashboard</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--color-text-muted)]">
-              Navegue entre contas, altere a janela temporal e acompanhe performance de conteúdo sem expor o token
+              Navegue entre contas, altere a janela temporal e acompanhe a performance de conteúdo sem expor o token
               da Meta ao browser.
             </p>
           </div>
@@ -222,46 +222,46 @@ export function InstagramDashboard() {
         )}
         <div className="mx-auto grid max-w-[1180px] gap-4 xl:grid-cols-2">
           {!selectedAccount ? (
-          <>
-            <div className="card-surface rounded-[28px] p-5">
-              <h3 className="mb-2 text-lg font-semibold">Melhor dia para postagens</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">Selecione uma conta para carregar activity.</p>
-            </div>
-            <div className="card-surface rounded-[28px] p-5">
-              <h3 className="mb-2 text-lg font-semibold">Melhor horário para postagens</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">Selecione uma conta para carregar activity.</p>
-            </div>
-          </>
-        ) : activityLoading ? (
-          <>
-            <LoadingSkeleton lines={5} />
-            <LoadingSkeleton lines={5} />
-          </>
-        ) : activityError ? (
-          <>
-            <ErrorMessage message={activityError} />
-            <ErrorMessage message={activityError} />
-          </>
-        ) : activity ? (
-          <>
-            <BestDayChart activity={activity} />
-            <BestHourChart activity={activity} />
-          </>
-        ) : (
-          <>
-            <div className="card-surface rounded-[28px] p-5">
-              <h3 className="mb-2 text-lg font-semibold">Melhor dia para postagens</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">
-                A Meta nao disponibilizou activity utilizavel para esta conta no periodo selecionado.
-              </p>
-            </div>
-            <div className="card-surface rounded-[28px] p-5">
-              <h3 className="mb-2 text-lg font-semibold">Melhor horario para postagens</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">
-                A Meta nao disponibilizou activity utilizavel para esta conta no periodo selecionado.
-              </p>
-            </div>
-          </>
+            <>
+              <div className="card-surface rounded-[28px] p-5">
+                <h3 className="mb-2 text-lg font-semibold">Melhor dia para postagens</h3>
+                <p className="text-sm text-[var(--color-text-muted)]">Selecione uma conta para carregar activity.</p>
+              </div>
+              <div className="card-surface rounded-[28px] p-5">
+                <h3 className="mb-2 text-lg font-semibold">Melhor horário para postagens</h3>
+                <p className="text-sm text-[var(--color-text-muted)]">Selecione uma conta para carregar activity.</p>
+              </div>
+            </>
+          ) : activityLoading ? (
+            <>
+              <LoadingSkeleton lines={5} />
+              <LoadingSkeleton lines={5} />
+            </>
+          ) : activityError ? (
+            <>
+              <ErrorMessage message={activityError} />
+              <ErrorMessage message={activityError} />
+            </>
+          ) : activity ? (
+            <>
+              <BestDayChart activity={activity} />
+              <BestHourChart activity={activity} />
+            </>
+          ) : (
+            <>
+              <div className="card-surface rounded-[28px] p-5">
+                <h3 className="mb-2 text-lg font-semibold">Melhor dia para postagens</h3>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  A Meta não disponibilizou activity utilizável para esta conta no período selecionado.
+                </p>
+              </div>
+              <div className="card-surface rounded-[28px] p-5">
+                <h3 className="mb-2 text-lg font-semibold">Melhor horário para postagens</h3>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  A Meta não disponibilizou activity utilizável para esta conta no período selecionado.
+                </p>
+              </div>
+            </>
           )}
         </div>
       </section>

@@ -467,7 +467,7 @@ describe("instagram api layer", () => {
     const stories = await fetchStories("ig-1");
 
     expect(stories.stories_count).toBe(0);
-    expect(stories.emptyReason).toContain("insights utilizaveis");
+    expect(stories.emptyReason).toContain("insights utilizáveis");
   });
 
   it("splits long ranges for aggregated reel insights", async () => {
