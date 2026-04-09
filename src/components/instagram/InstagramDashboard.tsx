@@ -153,7 +153,7 @@ export function InstagramDashboard() {
         {selectedAccount && insights && overview ? (
           <div className="min-w-0 space-y-4">
             <OverviewKPIs overview={overview} previousOverview={previousOverview} />
-            <div className="grid min-w-0 gap-4 min-[1680px]:grid-cols-[minmax(0,1.4fr)_minmax(260px,1fr)_minmax(260px,1fr)]">
+            <div className="min-w-0 space-y-4">
               <FollowerGrowthChart data={insights.reach} />
               {demographicsLoading ? <LoadingSkeleton lines={4} /> : null}
               {demographicsError ? <ErrorMessage message={demographicsError} /> : null}

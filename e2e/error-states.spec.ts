@@ -40,7 +40,7 @@ test("shows section error without dropping the rest of the page", async ({ page 
   });
 
   await page.goto("/instagram", { waitUntil: "domcontentloaded" });
-  await expect(page.getByLabel("Selecionar conta")).toBeVisible();
+  await expect(page.locator('select[aria-label="Selecionar conta"]')).toBeVisible();
 
   await expect(page.getByText("Erro na API de insights")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Posts do feed", level: 2 })).toBeVisible();

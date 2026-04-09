@@ -36,11 +36,11 @@ export function GenderDonutLegendChart({ data }: GenderDonutLegendChartProps) {
     <div className="card-surface min-w-0 rounded-[28px] p-5">
       <h3 className="mb-2 text-lg font-semibold">Seguidores por gênero</h3>
       {chartData.length ? (
-        <div className="grid items-center gap-6 xl:grid-cols-[minmax(280px,360px)_minmax(280px,340px)] xl:justify-between">
-          <div className="mx-auto w-full max-w-[360px]">
+        <div className="grid min-w-0 items-center gap-6">
+          <div className="mx-auto w-full max-w-[320px]">
             <DonutChart colors={chartColors} data={chartData} dataKey="value" nameKey="name" />
           </div>
-          <div className="mx-auto grid w-full max-w-[340px] gap-3">
+          <div className="grid min-w-0 gap-3">
             {chartData.map((item) => {
               const percentage = total > 0 ? (item.value / total) * 100 : 0;
               const style = GENDER_STYLES[item.name as keyof typeof GENDER_STYLES];
@@ -56,7 +56,7 @@ export function GenderDonutLegendChart({ data }: GenderDonutLegendChartProps) {
                         className="h-3 w-3 shrink-0 rounded-full"
                         style={{ backgroundColor: style.color }}
                       />
-                      <span className="min-w-0 text-lg font-semibold">{item.name}</span>
+                      <span className="min-w-0 break-words text-lg font-semibold">{item.name}</span>
                     </div>
                     <span
                       className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${style.badgeClass}`}

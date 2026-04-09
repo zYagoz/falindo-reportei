@@ -79,7 +79,7 @@ export function AccountSelector({
       <label className="mb-3 block text-sm font-medium text-[var(--color-text-muted)]">
         Conta ativa em {platform}
       </label>
-      <div className="grid min-w-0 gap-4 min-[1600px]:grid-cols-[minmax(0,1fr)_minmax(300px,0.8fr)] min-[1600px]:items-center">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.85fr)] xl:items-center">
         <select
           aria-label="Selecionar conta"
           className="min-w-0 w-full rounded-2xl border border-[var(--color-border)] bg-white px-4 py-3 outline-none ring-0"
@@ -98,14 +98,14 @@ export function AccountSelector({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 alt={selectedAccount.name}
-                className="h-11 w-11 rounded-full object-cover"
+                className="h-11 w-11 shrink-0 rounded-full object-cover"
                 onError={() => setImageFailed(true)}
                 src={selectedAccount.profile_picture_url}
               />
             ) : (
               <InitialsAvatar name={selectedAccount.name} />
             )}
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="truncate font-semibold">{selectedAccount.name}</p>
               <p className="truncate text-sm text-[var(--color-text-muted)]">@{selectedAccount.username}</p>
             </div>

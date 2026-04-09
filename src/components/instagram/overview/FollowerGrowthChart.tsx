@@ -13,7 +13,7 @@ export function FollowerGrowthChart({ data }: FollowerGrowthChartProps) {
   }));
 
   return (
-    <div className="card-surface rounded-[28px] p-5">
+    <div className="card-surface h-fit self-start rounded-[28px] p-5">
       <h3 className="mb-2 text-lg font-semibold">Alcance ao longo do período</h3>
       <p className="mb-4 text-sm text-[var(--color-text-muted)]">
         Série temporal de alcance diário retornada pela Meta API.

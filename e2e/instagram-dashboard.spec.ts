@@ -129,3 +129,29 @@ test("supports calendar month presets", async ({ page }) => {
   await expect(page.locator('input[type="date"]').first()).toHaveValue(previousMonthStart);
   await expect(page.locator('input[type="date"]').nth(1)).toHaveValue(previousMonthEnd);
 });
+
+test("stays stable on an intermediate desktop viewport", async ({ page }) => {
+  await mockDashboardApis(page);
+  await page.setViewportSize({ width: 1180, height: 960 });
+
+  await page.goto("/instagram", { waitUntil: "domcontentloaded" });
+
+  const accountSelect = page.locator('select[aria-label="Selecionar conta"]');
+  const accountPreview = page.locator("p").filter({ hasText: "@hazelstudio" }).first();
+
+  await expect(accountSelect).toBeVisible();
+  await expect(accountPreview).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Seguidores por gênero", level: 3 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Top cidades", level: 3 })).toBeVisible();
+
+  const selectBox = await accountSelect.boundingBox();
+  const previewBox = await accountPreview.boundingBox();
+  expect(selectBox).not.toBeNull();
+  expect(previewBox).not.toBeNull();
+  expect(previewBox!.y).toBeGreaterThanOrEqual(selectBox!.y + 40);
+
+  const hasHorizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+  );
+  expect(hasHorizontalOverflow).toBe(false);
+});
