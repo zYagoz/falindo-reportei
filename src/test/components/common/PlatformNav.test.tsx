@@ -25,9 +25,10 @@ describe("PlatformNav", () => {
 
     expect(screen.getByRole("link", { name: /Instagram/i })).toHaveAttribute("href", "/instagram");
     expect(screen.getByAltText("Instagram logo")).toBeInTheDocument();
+    expect(screen.getByAltText("Facebook logo")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Facebook/i })).toHaveAttribute("href", "/facebook");
     expect(screen.getByRole("link", { name: /LinkedIn/i })).toHaveAttribute("href", "/linkedin");
-    expect(screen.getAllByText("Em breve")).toHaveLength(2);
+    expect(screen.getAllByText("Em breve")).toHaveLength(1);
   });
 
   it("falls back to the icon when the custom instagram image fails", () => {

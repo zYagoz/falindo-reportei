@@ -1,16 +1,15 @@
-# Social Insights Dashboard
+﻿# Social Insights Dashboard
 
-Dashboard interno para acompanhamento de métricas sociais, com foco atual em Instagram Business via Meta Graph API.
+Dashboard interno para acompanhamento de metricas sociais via Meta Graph API.
 
-## Visão geral
+## Visao geral
 
-O projeto consolida métricas de conta e conteúdo do Instagram em um painel único, com:
+O projeto concentra metricas de conta e conteudo em um unico painel, com foco atual em:
 
-- visão geral de audiência e alcance
-- resumo de feed e reels
-- stories recentes
-- activity de seguidores online
-- seleção de conta e presets de período
+- Instagram Business completo no MVP
+- Facebook Page em rollout gradual
+- selecao de conta/pagina e presets de periodo
+- estados de loading, erro e indisponibilidade de dados
 
 ## Stack
 
@@ -24,25 +23,25 @@ O projeto consolida métricas de conta e conteúdo do Instagram em um painel ún
 
 ## Setup
 
-1. Instale as dependências com `npm install`
+1. Instale as dependencias com `npm install`
 2. Copie `.env.local.example` para `.env.local`
-3. Preencha as variáveis de ambiente da Meta
+3. Preencha as variaveis de ambiente da Meta
 4. Rode `npm run dev`
 
-## Variáveis de ambiente
+## Variaveis de ambiente
 
-| Variável | Descrição |
+| Variavel | Descricao |
 | --- | --- |
-| `META_ACCESS_TOKEN` | Token do System User ou app com acesso à Meta Graph API |
-| `META_API_VERSION` | Versão da Meta Graph API |
+| `META_ACCESS_TOKEN` | Token do System User ou app com acesso a Meta Graph API |
+| `META_API_VERSION` | Versao da Meta Graph API |
 | `META_BASE_URL` | URL base da Meta Graph API |
-| `NEXT_PUBLIC_APP_NAME` | Nome público exibido na interface |
+| `NEXT_PUBLIC_APP_NAME` | Nome publico exibido na interface |
 
 Exemplo base:
 
 ```env
 META_ACCESS_TOKEN=
-META_API_VERSION=v21.0
+META_API_VERSION=v25.0
 META_BASE_URL=https://graph.facebook.com
 NEXT_PUBLIC_APP_NAME="Social Insights Dashboard"
 ```
@@ -52,42 +51,73 @@ NEXT_PUBLIC_APP_NAME="Social Insights Dashboard"
 | Script | Uso |
 | --- | --- |
 | `npm run dev` | Ambiente local de desenvolvimento |
-| `npm run build` | Build de produção |
+| `npm run build` | Build de producao |
 | `npm run start` | Servir a build localmente |
-| `npm run lint` | Verificação com ESLint |
-| `npm run test` | Testes unitários e de integração |
+| `npm run lint` | Verificacao com ESLint |
+| `npm run test` | Testes unitarios e de integracao |
 | `npm run test:coverage` | Cobertura com Vitest |
 | `npm run test:e2e` | Fluxos E2E com Playwright |
 
 ## Escopo atual do MVP
 
-Implementado para Instagram:
+### Instagram Business
+
+Implementado:
 
 - Overview com KPIs agregados de conta
 - Feed com resumo e tabela de posts
 - Reels com resumo agregado e tabela
 - Stories com resumo de stories ativos ou recentes
-- Activity com melhores dias e horários de postagem
-- seleção de conta
-- presets de período: últimos 7, 30 e 90 dias, este mês e mês anterior
+- Activity com melhores dias e horarios de postagem
+- selecao de conta
+- presets de periodo: ultimos 7, 30 e 90 dias, este mes e mes anterior
 
-Ainda fora do escopo funcional atual:
+### Facebook Page
 
-- Facebook Page
+Implementado nesta etapa:
+
+- entrada real no menu de plataforma
+- selecao de pagina
+- persistencia da pagina selecionada
+- shell inicial do dashboard
+- overview defensivo com snapshot da pagina
+- rota interna de debug para investigacao de insights
+
+Ainda pendente para Facebook:
+
+- calibragem final do overview com pagina elegivel e insights reais
+- modulo de posts
+- modulo de demographics
+
+### Fora do escopo atual
+
 - LinkedIn
-- histórico persistido próprio fora do que a Meta expõe na consulta
+- historico persistido proprio fora do que a Meta expoe na consulta
+- Activity para Facebook
+- Videos/Reels como modulo dedicado no Facebook
 
-## Limitações da Meta API
+## Limitacoes da Meta API
 
-- Stories são efêmeros e dependem da janela curta disponibilizada pela Meta
-- não existe histórico amplo de Stories sem persistência própria no backend
-- algumas métricas variam conforme a versão e a disponibilidade da API da Meta
-- certos insights podem retornar vazio ou erro para contas pequenas ou com restrições regionais
-- parte das comparações históricas depende das limitações de janela de consulta da Meta
+### Instagram
+
+- Stories sao efemeros e dependem da janela curta disponibilizada pela Meta
+- nao existe historico amplo de Stories sem persistencia propria no backend
+- algumas metricas variam conforme a versao e a disponibilidade da API da Meta
+- parte das comparacoes historicas depende das limitacoes de janela da Meta
+
+### Facebook
+
+- o objeto da pagina pode responder normalmente com `followers_count` e `fan_count`, enquanto `/{page-id}/insights` retorna `data: []`
+- esse retorno vazio pode acontecer tanto em paginas pequenas quanto em paginas com `fan_count >= 100`
+- em contas de baixo volume, em paginas com pouca atividade recente ou em cenarios de elegibilidade restrita, a Meta pode nao devolver insights publicos mesmo quando o Business Suite exibe metricas internamente
+- o Meta Business Suite pode mostrar metricas que nao sao devolvidas da mesma forma pela Graph API publica
+- por isso, o produto trata `data: []` como **insights indisponiveis via API**, e nao como desempenho zero
+- quando os insights do Facebook nao estiverem disponiveis, o dashboard mostra apenas o snapshot basico da pagina e uma mensagem explicita sobre a limitacao da Meta
 
 ## Plataformas suportadas
 
 - Instagram Business
+- Facebook Page em rollout parcial
 
 ## Estrutura principal
 
@@ -104,20 +134,22 @@ e2e/
 
 O projeto usa:
 
-- Vitest para testes unitários e de integração
+- Vitest para testes unitarios e de integracao
 - MSW para mocks da Meta API
 - Playwright para fluxos E2E
 
 Fluxos validados no MVP:
 
 - carregamento inicial do dashboard
-- seleção de conta
-- troca de período
+- selecao de conta/pagina
+- troca de periodo
 - estados de erro
-- responsividade básica
+- estado de insights indisponiveis no Facebook
+- responsividade basica
 
-## Observações de entrega
+## Observacoes de entrega
 
-- o token da Meta é consumido apenas no servidor
-- o dashboard foi ajustado para desktop, zoom-out, viewport intermediária e mobile
-- o módulo de Stories cobre apenas o que a Meta ainda disponibiliza via API na janela efêmera atual
+- o token da Meta e consumido apenas no servidor
+- a rota `/api/facebook/overview-debug` existe apenas para diagnostico interno
+- o dashboard foi ajustado para desktop, zoom-out, viewport intermediaria e mobile
+- o modulo de Stories cobre apenas o que a Meta ainda disponibiliza via API na janela efemera atual

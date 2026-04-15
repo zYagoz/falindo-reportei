@@ -13,7 +13,13 @@ const items = [
     enabled: true,
     imageSrc: "/instagram-logo.png",
   },
-  { href: "/facebook", label: "Facebook", icon: BadgeInfo, enabled: false },
+  {
+    href: "/facebook",
+    label: "Facebook",
+    icon: BadgeInfo,
+    enabled: true,
+    imageSrc: "/facebook-logo.png",
+  },
   { href: "/linkedin", label: "LinkedIn", icon: Building2, enabled: false },
 ];
 

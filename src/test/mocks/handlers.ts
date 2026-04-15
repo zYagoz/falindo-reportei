@@ -2,6 +2,9 @@ import { http, HttpResponse } from "msw";
 import {
   activityFixture,
   demographicsFixture,
+  facebookInsightsFixture,
+  facebookOverviewFixture,
+  facebookPagesFixture,
   instagramAccountsFixture,
   insightsFixture,
   overviewFixture,
@@ -13,6 +16,9 @@ import {
 
 export const handlers = [
   http.get("/api/instagram/accounts", () => HttpResponse.json({ accounts: instagramAccountsFixture })),
+  http.get("/api/facebook/pages", () => HttpResponse.json({ pages: facebookPagesFixture })),
+  http.get("/api/facebook/overview", () => HttpResponse.json({ overview: facebookOverviewFixture })),
+  http.get("/api/facebook/insights", () => HttpResponse.json({ insights: facebookInsightsFixture })),
   http.get("/api/instagram/insights", () => HttpResponse.json({ insights: insightsFixture })),
   http.get("/api/instagram/overview", () => HttpResponse.json({ overview: overviewFixture })),
   http.get("/api/instagram/activity", () => HttpResponse.json({ activity: activityFixture })),

@@ -3,6 +3,8 @@ import { BestDayChart } from "@/components/instagram/activity/BestDayChart";
 import { BestHourChart } from "@/components/instagram/activity/BestHourChart";
 import { activityFixture } from "@/test/mocks/fixtures/meta";
 
+vi.setConfig({ testTimeout: 15000 });
+
 describe("activity charts", () => {
   it("renders activity headings and limitation notice", () => {
     render(

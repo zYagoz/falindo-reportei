@@ -18,6 +18,14 @@ export interface MetricVariation {
   changeAbsolute: number;
 }
 
+export interface SocialAccount {
+  id: string;
+  name: string;
+  username?: string;
+  picture_url?: string;
+  profile_picture_url?: string;
+}
+
 export type TimeframeOption = "this_month" | "this_week";
 
 export type Platform = "instagram" | "facebook" | "linkedin";

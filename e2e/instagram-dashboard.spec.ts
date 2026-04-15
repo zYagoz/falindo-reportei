@@ -88,7 +88,7 @@ test("redirects to instagram and renders dashboard shell", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Últimos 30 dias", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Este mês", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Mês anterior", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Instagram", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Instagram/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Stories", level: 3 })).toBeVisible();
   await expect(page.getByText("Stories ativas")).toBeVisible();
 });

@@ -1,15 +1,17 @@
 interface MetaApiOptions {
   params?: Record<string, string>;
   revalidate?: number;
+  accessToken?: string;
 }
 
 export async function metaFetch<T>(
   endpoint: string,
   options: MetaApiOptions = {},
 ): Promise<T> {
-  const accessToken = process.env.META_ACCESS_TOKEN;
+  const envAccessToken = process.env.META_ACCESS_TOKEN;
   const baseUrl = process.env.META_BASE_URL || "https://graph.facebook.com";
   const apiVersion = process.env.META_API_VERSION || "v21.0";
+  const accessToken = options.accessToken ?? envAccessToken;
 
   if (!accessToken) {
     throw new Error("META_ACCESS_TOKEN não configurado no .env.local");

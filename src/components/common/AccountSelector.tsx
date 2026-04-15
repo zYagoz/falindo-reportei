@@ -1,18 +1,21 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import type { Platform } from "@/lib/types/common.types";
-import type { InstagramAccount } from "@/lib/types/instagram.types";
+import type { Platform, SocialAccount } from "@/lib/types/common.types";
 
-const STORAGE_KEY = "selected_instagram_account";
-
-interface AccountSelectorProps {
-  accounts: InstagramAccount[];
+interface AccountSelectorProps<TAccount extends SocialAccount> {
+  accounts: TAccount[];
   selectedId: string | null;
-  onSelect: (account: InstagramAccount) => void;
+  onSelect: (account: TAccount) => void;
   loading: boolean;
   platform: Platform;
 }
+
+const PLATFORM_LABELS: Record<Platform, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  linkedin: "LinkedIn",
+};
 
 function InitialsAvatar({ name }: { name: string }) {
   return (
@@ -22,21 +25,36 @@ function InitialsAvatar({ name }: { name: string }) {
   );
 }
 
-export function AccountSelector({
+function getStorageKey(platform: Platform) {
+  return `selected_${platform}_account`;
+}
+
+function getPictureUrl(account: SocialAccount) {
+  return account.picture_url ?? account.profile_picture_url;
+}
+
+function formatAccountLabel(account: SocialAccount) {
+  return account.username ? `${account.name} (@${account.username})` : account.name;
+}
+
+export function AccountSelector<TAccount extends SocialAccount>({
   accounts,
   selectedId,
   onSelect,
   loading,
   platform,
-}: AccountSelectorProps) {
+}: AccountSelectorProps<TAccount>) {
   const [imageFailed, setImageFailed] = useState(false);
+  const storageKey = getStorageKey(platform);
+  const selectedAccount = accounts.find((account) => account.id === selectedId) ?? null;
+  const selectedPictureUrl = selectedAccount ? getPictureUrl(selectedAccount) : undefined;
 
   useEffect(() => {
     if (loading || !accounts.length) {
       return;
     }
 
-    const storedId = window.localStorage.getItem(STORAGE_KEY);
+    const storedId = window.localStorage.getItem(storageKey);
     const restored = accounts.find((account) => account.id === storedId);
 
     if (restored && restored.id !== selectedId) {
@@ -47,13 +65,11 @@ export function AccountSelector({
     if (!selectedId) {
       onSelect(accounts[0]);
     }
-  }, [accounts, loading, onSelect, selectedId]);
-
-  const selectedAccount = accounts.find((account) => account.id === selectedId);
+  }, [accounts, loading, onSelect, selectedId, storageKey]);
 
   useEffect(() => {
     setImageFailed(false);
-  }, [selectedAccount?.id, selectedAccount?.profile_picture_url]);
+  }, [selectedAccount?.id, selectedPictureUrl]);
 
   function handleChange(accountId: string) {
     const account = accounts.find((item) => item.id === accountId);
@@ -62,7 +78,7 @@ export function AccountSelector({
       return;
     }
 
-    window.localStorage.setItem(STORAGE_KEY, account.id);
+    window.localStorage.setItem(storageKey, account.id);
     onSelect(account);
   }
 
@@ -77,37 +93,41 @@ export function AccountSelector({
   return (
     <div className="card-surface min-w-0 rounded-[24px] p-5">
       <label className="mb-3 block text-sm font-medium text-[var(--color-text-muted)]">
-        Conta ativa em {platform}
+        Conta ativa em {PLATFORM_LABELS[platform]}
       </label>
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.85fr)] xl:items-center">
         <select
           aria-label="Selecionar conta"
           className="min-w-0 w-full rounded-2xl border border-[var(--color-border)] bg-white px-4 py-3 outline-none ring-0"
+          disabled={!accounts.length}
           onChange={(event) => handleChange(event.target.value)}
           value={selectedId ?? ""}
         >
+          {!accounts.length ? <option value="">Nenhuma conta disponivel</option> : null}
           {accounts.map((account) => (
             <option key={account.id} value={account.id}>
-              {account.name} (@{account.username})
+              {formatAccountLabel(account)}
             </option>
           ))}
         </select>
         {selectedAccount ? (
           <div className="flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl bg-[var(--color-primary)]/8 px-4 py-3">
-            {selectedAccount.profile_picture_url && !imageFailed ? (
+            {selectedPictureUrl && !imageFailed ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 alt={selectedAccount.name}
                 className="h-11 w-11 shrink-0 rounded-full object-cover"
                 onError={() => setImageFailed(true)}
-                src={selectedAccount.profile_picture_url}
+                src={selectedPictureUrl}
               />
             ) : (
               <InitialsAvatar name={selectedAccount.name} />
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold">{selectedAccount.name}</p>
-              <p className="truncate text-sm text-[var(--color-text-muted)]">@{selectedAccount.username}</p>
+              {selectedAccount.username ? (
+                <p className="truncate text-sm text-[var(--color-text-muted)]">@{selectedAccount.username}</p>
+              ) : null}
             </div>
           </div>
         ) : null}

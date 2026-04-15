@@ -10,6 +10,11 @@ import type {
   InstagramReelsAggregate,
   InstagramStoriesAggregate,
 } from "@/lib/types/instagram.types";
+import type {
+  FacebookInsights,
+  FacebookOverviewAggregate,
+  FacebookPage,
+} from "@/lib/types/facebook.types";
 
 export const instagramAccountsFixture: InstagramAccount[] = [
   {
@@ -29,6 +34,67 @@ export const instagramAccountsFixture: InstagramAccount[] = [
     pageName: "Nova Agency",
   },
 ];
+
+export const facebookPagesFixture: FacebookPage[] = [
+  {
+    id: "fb-page-1",
+    name: "Hazel Studio",
+    username: "hazelstudiofb",
+    picture_url: "https://images.example.com/hazel-facebook.jpg",
+    category: "Marketing Agency",
+  },
+  {
+    id: "fb-page-2",
+    name: "Nova Dental",
+    category: "Health/Beauty",
+  },
+];
+
+export const facebookOverviewFixture: FacebookOverviewAggregate = {
+  followers_total: 4821,
+  fan_count: 534,
+  follows: 34,
+  unfollows: 2,
+  net_followers: 32,
+  views: 128400,
+  page_visits: 1300,
+  content_interactions: 172,
+  insights_available: true,
+};
+
+export const facebookOverviewUnavailableFixture: FacebookOverviewAggregate = {
+  followers_total: 7,
+  fan_count: 7,
+  follows: 0,
+  unfollows: 0,
+  net_followers: 0,
+  views: 0,
+  page_visits: 0,
+  content_interactions: 0,
+  insights_available: false,
+  insights_unavailable_reason:
+    "Insights indisponiveis via API para esta pagina. A Meta libera Page Insights apenas para paginas com pelo menos 100 curtidas. Curtidas atuais: 7.",
+};
+
+export const previousFacebookOverviewFixture: FacebookOverviewAggregate = {
+  followers_total: 4759,
+  fan_count: 521,
+  follows: 22,
+  unfollows: 1,
+  net_followers: 21,
+  views: 121700,
+  page_visits: 985,
+  content_interactions: 143,
+  insights_available: true,
+};
+
+export const facebookInsightsFixture: FacebookInsights = {
+  views: [
+    { end_time: "2026-03-30T00:00:00+0000", value: 3810 },
+    { end_time: "2026-03-31T00:00:00+0000", value: 4020 },
+    { end_time: "2026-04-01T00:00:00+0000", value: 4210 },
+  ],
+};
 
 export const insightsFixture: InstagramInsights = {
   accounts_engaged: 3200,

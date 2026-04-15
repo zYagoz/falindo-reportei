@@ -1,4 +1,6 @@
-export interface InstagramAccount {
+import type { SocialAccount } from "./common.types";
+
+export interface InstagramAccount extends SocialAccount {
   id: string;
   name: string;
   username: string;

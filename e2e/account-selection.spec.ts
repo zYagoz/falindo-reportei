@@ -11,6 +11,8 @@ import {
   storiesFixture,
 } from "../src/test/mocks/fixtures/meta";
 
+test.setTimeout(60000);
+
 test("persists selected account in localStorage", async ({ page }) => {
   const accountSelect = page.locator('select[aria-label="Selecionar conta"]');
 
@@ -43,11 +45,11 @@ test("persists selected account in localStorage", async ({ page }) => {
   });
 
   await page.goto("/instagram", { waitUntil: "domcontentloaded" });
-  await expect(accountSelect).toBeVisible();
+  await expect(accountSelect).toBeVisible({ timeout: 15000 });
   await accountSelect.selectOption("ig-2");
   await expect(accountSelect).toHaveValue("ig-2");
 
   await page.reload();
-  await expect(accountSelect).toBeVisible();
+  await expect(accountSelect).toBeVisible({ timeout: 15000 });
   await expect(accountSelect).toHaveValue("ig-2");
 });

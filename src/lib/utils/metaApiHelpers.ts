@@ -220,8 +220,8 @@ export function parseMetricAggregateTotal(response: unknown, metricName: string)
   return metric.values.reduce((total, entry) => total + sumMetricObject(entry.value), 0);
 }
 
-export function parseReachTimeSeries(response: unknown): MetricDataPoint[] {
-  const metric = getMetric(response, "reach");
+export function parseMetricTimeSeries(response: unknown, metricName: string): MetricDataPoint[] {
+  const metric = getMetric(response, metricName);
 
   if (!metric?.values?.length) {
     return [];
@@ -233,6 +233,10 @@ export function parseReachTimeSeries(response: unknown): MetricDataPoint[] {
       value: entry.value as number,
       end_time: entry.end_time as string,
     }));
+}
+
+export function parseReachTimeSeries(response: unknown): MetricDataPoint[] {
+  return parseMetricTimeSeries(response, "reach");
 }
 
 export function parseOnlineFollowersSeries(response: unknown): OnlineFollowersPoint[] {
